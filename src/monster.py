@@ -2,8 +2,7 @@ import math
 import random
 
 import pygame
-from multi_sprite_renderer_normal import MultiSprite as msr
-from multi_sprite_renderer_normal import rotated_collision
+from multi_sprite_renderer_hardware import MultiSprite as msr, rotated_collision
 from entity import Laser
 from entity import Box
 

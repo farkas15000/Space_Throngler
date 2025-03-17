@@ -1,29 +1,34 @@
-'''
+"""
 To enable debug mode go to line 712 and 716.
-'''
+"""
 
 import asyncio
 import platform
 from datetime import timedelta
 import pygame
-from sys import exit
+import sys
 import time
 import random
 import os
 import copy
+from pygame._sdl2.video import Window, Renderer, Texture
+if sys.platform == "emscripten":
+    platform.window.canvas.style.imageRendering = "pixelated"
 
-import monster
+from engine import StateMachine as Sm
 from buttons import Button
-from multi_sprite_renderer_normal import MultiSprite as msr
+from multi_sprite_renderer_hardware import MultiSprite as Msr
+from assets import Assets
 from particles import Particle
 from monster import Monster
 import entity
 from BVH import BVH
+print('_SDL2 rendering')
+
 
 
 def map_value(value, valuemin, valuemax, mapmin, mapmax):
     return ((value - valuemin) / (valuemax - valuemin)) * (mapmax - mapmin) + mapmin
-    # for some reason pygbag doesnt have pygame.math.remap()
 
 
 def sprite_slicer(width, height, wpad=0, hpad=0, outputlist=None, folders=(), name='', sprite=None):
@@ -56,21 +61,15 @@ def sprite_slicer(width, height, wpad=0, hpad=0, outputlist=None, folders=(), na
     return outputlist
 
 
-class Game:
+class App:
 
     def __init__(self):
-        self.version = "Version: 0.2.1w"
+        self.winresolution = 1024, 600
+        self.fullscreen = False
+
+        self.soundvolume = 0.5
 
         self.damagemult = 1
-        if hasattr(platform, 'window'):
-            self.mobile = platform.window.mobile_check() or platform.window.mobile_tablet()
-            if self.mobile:
-                self.damagemult = 0.7
-        else:
-            self.mobile = False
-
-        self.winscale = 1  # fixed coordinates, doesn't work in this game
-        self.sound = 0.5
 
         self.controls = {'Up': pygame.K_w,
                          'Down': pygame.K_s,
@@ -81,39 +80,46 @@ class Game:
                          }
 
         abspath = os.path.dirname(os.path.abspath(__file__))
+        self.spritespath = os.path.join(abspath, 'assets', 'sprites')
+        self.audiopath = os.path.join(abspath, 'assets', 'audio')
+        self.fontpath = os.path.join(abspath, 'assets', 'fonts')
 
-        folder = 'assets'
-
-        self.spritespath = os.path.join(abspath, folder, 'sprites')
-        self.audiopath = os.path.join(abspath, folder, 'audio')
-        self.fontpath = os.path.join(abspath, folder, 'fonts')
-        #print(abspath)
+        if hasattr(platform, 'window'):
+            self.mobile = platform.window.mobile_check() or platform.window.mobile_tablet()
+        else:
+            self.mobile = False
 
         pygame.init()
         self.clock = pygame.time.Clock()
 
-        self.width, self.height = 1024 * self.winscale, 600 * self.winscale
+        self.logical_sizeRect = pygame.Rect(0, 0, 1024, 600)
 
-        self.window = pygame.display.set_mode(size=[self.width, self.height])
+        self.window = Window(size=(1024, 600))
+        self.window.resizable = True
+        self.window.title = "Space Throngler!"
 
-        pygame.display.set_caption("Space Throngler!")
-
-        #pygame.mouse.set_visible(True)
+        self.display = Renderer(self.window, accelerated=-1, target_texture=False)
+        self.screen = Texture(self.display, self.logical_sizeRect.size, target=True)
+        Msr.setScreen(self.display)
 
         self.states = {'menu': self.menu,
-                       #'start': self.start,
                        'game': self.game,
                        'scene': self.scene,
                        'pause': self.pause,
-                       #'settings': self.options,
-                       #'credits': self.credits,
-                       #'levelup': self.levelup,
-                       #'endscreen': self.endscreen,
                        'loadin': self.loadin,
                        }
 
-        self.stateprev = (None, None)
-        self.stateloop = self.states['loadin']
+        self.dt = 0.016
+        self.running = True
+
+        Button.controls = self.controls
+
+        Assets.makemsrs()
+        Assets.makeaudio()
+
+        Sm.app = self
+        Sm.state = 'menu'
+        Sm.states['game'] = None
 
     def menu(self):
         if self.stateprev[0] != self.stateloop:
@@ -125,17 +131,17 @@ class Game:
 
             self.exitbutton.scale = (3, 3)
 
-        self.startimer -= dt
+        self.startimer -= self.dt
         self.stars()
 
-        self.menustartimer -= dt
+        self.menustartimer -= self.dt
         if self.menustartimer <= 0:
             self.menustartimer = random.uniform(0.2, 0.5)
             self.menustarsadd()
         self.menustars.update()
 
 
-        self.trailtimer -= dt
+        self.trailtimer -= self.dt
         if self.trailtimer <= 0:
             self.trailtimer = random.uniform(0.05, 0.1)
             for z in range(5):
@@ -146,7 +152,7 @@ class Game:
                                  scale=(4, 4), rotation=rot+180)
                 self.menustars.add(trail)
 
-        self.asteroidrot -= 45 * dt
+        self.asteroidrot -= 45 * self.dt
         asteroid = self.asteroidsprites.draw(0, scale=(3, 3), pos=(880, 305), offset=(0, 0), rotation=self.asteroidrot)[0]
         if self.mouseclicked and self.easteregg < 10 and asteroid.collidepoint(self.mousepos[1]):
             self.easteregg += 1
@@ -185,18 +191,18 @@ class Game:
             posx = self.soundbutton.pos.x
             self.soundbutton.pos.x = pygame.math.clamp(self.mousepos[1][0], 531, 681)
             if posx != self.soundbutton.pos.x:
-                self.sound = map_value(self.soundbutton.pos.x, 531, 681, 0, 1)
+                self.soundvolume = map_value(self.soundbutton.pos.x, 531, 681, 0, 1)
                 self.audio()
         if self.keys((self.controls['Left'], pygame.K_LEFT, self.controls['Down'], pygame.K_DOWN))[0]:
-            self.sound -= 0.05
-            self.sound = max(self.sound, 0)
+            self.soundvolume -= 0.05
+            self.soundvolume = max(self.soundvolume, 0)
             self.audio()
-            self.soundbutton.pos.x = map_value(self.sound, 0, 1, 531, 681)
+            self.soundbutton.pos.x = map_value(self.soundvolume, 0, 1, 531, 681)
         if self.keys((self.controls['Right'], pygame.K_RIGHT, self.controls['Up'], pygame.K_UP))[0]:
-            self.sound += 0.05
-            self.sound = min(self.sound, 1)
+            self.soundvolume += 0.05
+            self.soundvolume = min(self.soundvolume, 1)
             self.audio()
-            self.soundbutton.pos.x = map_value(self.sound, 0, 1, 531, 681)
+            self.soundbutton.pos.x = map_value(self.soundvolume, 0, 1, 531, 681)
 
         self.mobilebutton.update()
         if self.mobilebutton.clicked:
@@ -222,12 +228,12 @@ class Game:
 
             self.asteroid = [pygame.Vector2(100, -100), -30]
 
-        self.scenetimer += dt
+        self.scenetimer += self.dt
 
         if self.scenetimer >= 1.1 and len(self.boxes) < 3:
             self.boxes.add(entity.Box(self.boxsprites, self.boxsounds, self.boxhitsounds))
 
-        self.startimer -= dt
+        self.startimer -= self.dt
         self.stars()
         self.starparticles.update()
 
@@ -237,21 +243,21 @@ class Game:
 
         self.boxparticles.update()
         for particle in self.boxparticles:
-            particle.velocity.y += 120 * dt
+            particle.velocity.y += 120 * self.dt
 
         self.boxes.update('draw')
-        entity.Box.tentacle(dt, ((-100, -100), (100, 100)), copy.deepcopy(self.mouse), False)
+        entity.Box.tentacle(self.dt, ((-100, -100), (100, 100)), copy.deepcopy(self.mouse), False)
         self.boxes.update()
 
         self.asteroidsprites.draw(0, scale=(2, 2), pos=self.asteroid[0], offset=(0, 0), rotation=self.asteroid[1])
         reached = self.asteroid[0]!=(self.width / 2, self.height / 2)
-        self.asteroid[0].move_towards_ip((self.width / 2, self.height / 2), 500 * dt)
+        self.asteroid[0].move_towards_ip((self.width / 2, self.height / 2), 500 * self.dt)
         if self.asteroid[0] != (self.width / 2, self.height / 2):
-            self.asteroid[1] += -290 * dt
+            self.asteroid[1] += -290 * self.dt
         if reached and self.asteroid[0]==(self.width / 2, self.height / 2):
             self.asteroidsound.play()
 
-        self.rockettimer -= dt
+        self.rockettimer -= self.dt
         self.rocket()
         self.laserparticles.update()
 
@@ -316,16 +322,16 @@ class Game:
             self.astroshealth = 100
             self.astrosdamage = 10
 
-        self.startimer -= dt
-        self.rockettimer -= dt
+        self.startimer -= self.dt
+        self.rockettimer -= self.dt
 
         if len(self.boxes) < self.boxlimit:
-            self.boxtimer -= dt
+            self.boxtimer -= self.dt
         if self.boxtimer <= 0:
             self.boxtimer = 1
             self.boxes.add(entity.Box(self.boxsprites, self.boxsounds, self.boxhitsounds))
 
-        self.astrostimer -= dt
+        self.astrostimer -= self.dt
         if self.astrostimer <= 0 and len(self.astros) < self.nextwave-entity.Astronaut.died:
             self.astrostimer = 2
             self.astros.add(entity.Astronaut(self.astronautsprites, self.astroshealth, self.astrosdamage*self.damagemult))
@@ -368,16 +374,16 @@ class Game:
                 self.move.update(0, 0)
 
         #  monster update
-        self.monster.update(dt, self.move, self.mousepos[1])
+        self.monster.update(self.dt, self.move, self.mousepos[1])
         tentacleendpos = self.monster.tentacle.endpos.copy()
 
         self.boxparticles.update()
         for particle in self.boxparticles:
-            particle.velocity.y += 120 * dt
+            particle.velocity.y += 120 * self.dt
 
         #  box update
         tentache_reached = (self.monster.pos - self.monster.tentacle.endpos).length() > self.monster.tentacle.reach * 0.9
-        entity.Box.tentacle(dt, (tentacleendpos, self.monster.tentacle.endpos), copy.deepcopy(self.mouse), tentache_reached)
+        entity.Box.tentacle(self.dt, (tentacleendpos, self.monster.tentacle.endpos), copy.deepcopy(self.mouse), tentache_reached)
         self.boxes.update()
 
         monster_y = self.monster.pos.y
@@ -452,7 +458,7 @@ class Game:
         if self.asteroidparticles:
             self.asteroidparticles.update()
             for asteroid in self.asteroidparticles:
-                asteroid.velocity.y += 350*dt
+                asteroid.velocity.y += 350*self.dt
 
         if self.monster.health <= 0:
             self.shade.draw()
@@ -462,10 +468,10 @@ class Game:
             if self.keys((self.controls['Ok'], pygame.K_RETURN))[0]:
                 self.stateloop = self.states['menu']
         else:
-            self.timer += dt
+            self.timer += self.dt
 
             if self.clearedtimer > 0:
-                self.clearedtimer -= dt
+                self.clearedtimer -= self.dt
                 self.shade.draw()
                 self.font_white.write(f"Wave cleared!", scale=(3, 3), pos=(285, 300), offset=(0, 0.5))
 
@@ -536,7 +542,6 @@ class Game:
         self.monster.tentacle.draw()
         self.monster.body_draw()
 
-
         #  lasers update/draw
         self.lasers.update('draw')
         self.laserparticles.update('draw')
@@ -552,7 +557,7 @@ class Game:
 
         if self.clearedtimer > 0:
             self.shade.draw()
-            self.font_white.write(f"Wave cleared!", scale=(3, 3), pos=(285, 300), offset=(0, 0.5))
+            self.font_white.write("Wave cleared!", scale=(3, 3), pos=(285, 300), offset=(0, 0.5))
 
         if self.asteroidparticles:
             self.asteroidparticles.update('draw')
@@ -630,29 +635,29 @@ class Game:
 
         linkedsprites = []
 
-        self.font_black = msr(self.window, folders=(self.fontpath,), font='VCR_OSD_MONO_1.001', size=21, color='Black')
-        self.font_white = msr(self.window, folders=(self.fontpath,), font='VCR_OSD_MONO_1.001', size=21)
+        self.font_black = Msr(self.window, folders=(self.fontpath,), font='VCR_OSD_MONO_1.001', size=21, color='Black')
+        self.font_white = Msr(self.window, folders=(self.fontpath,), font='VCR_OSD_MONO_1.001', size=21)
 
         ship = pygame.image.load(os.path.join(self.spritespath, 'ship5' + '.png')).convert()
         ship.set_colorkey((163, 73, 164))
         ship.fill((234, 234, 234, 0), (50, 18, 412, 264))
         ship = pygame.transform.scale_by(ship, 2)
-        self.ship = msr(self.window, images=(ship,), alpha=1)
+        self.ship = Msr(self.window, images=(ship,), alpha=1)
 
         shade = pygame.Surface((1024, 600))
-        self.shade = msr(self.window, images=(shade,), alpha=0.7)
+        self.shade = Msr(self.window, images=(shade,), alpha=0.7)
 
         doors = pygame.image.load(os.path.join(self.spritespath, 'doors1' + '.png')).convert()
         doors.set_colorkey((163, 73, 164))
         doors = pygame.transform.scale_by(doors, 2)
         linkedsprites.clear()
         sprite_slicer(30*2, 36*2, wpad=2*2, outputlist=linkedsprites, sprite=doors)
-        self.doorsprites = msr(self.window, images=linkedsprites)
+        self.doorsprites = Msr(self.window, images=linkedsprites)
 
         rocket = pygame.image.load(os.path.join(self.spritespath, 'rocket' + '.png')).convert()
         rocket.set_colorkey((163, 73, 164))
         rocket = pygame.transform.scale_by(rocket, 2)
-        self.rocketsprites = msr(self.window, images=(rocket,))
+        self.rocketsprites = Msr(self.window, images=(rocket,))
 
         self.scale = 1.0
         healthbox = pygame.Surface((32, 8))
@@ -661,7 +666,7 @@ class Game:
         health.fill((163, 73, 164))
         health.set_colorkey((163, 73, 164))
         health.fill((138, 15, 52), (1, 1, 30, 6))
-        self.monstersprites = msr(self.window, folders=(self.spritespath,), names=("head", "eye", "limb", "joint"), images=(healthbox, health))
+        self.monstersprites = Msr(self.window, folders=(self.spritespath,), names=("head", "eye", "limb", "joint"), images=(healthbox, health))
 
         linkedsprites.clear()
         sprite_slicer(22, 22, outputlist=linkedsprites, folders=(self.spritespath,), name='box_sprites1')
@@ -669,20 +674,20 @@ class Game:
         boxoutline.set_colorkey((163, 73, 164))
         linkedsprites.append(boxoutline)
         sprite_slicer(22, 22, outputlist=linkedsprites, folders=(self.spritespath,), name='box_shadow_sprites')
-        self.boxsprites = msr(self.window, images=linkedsprites)
+        self.boxsprites = Msr(self.window, images=linkedsprites)
 
         linkedsprites.clear()
         sprite_slicer(24, 24, outputlist=linkedsprites, folders=(self.spritespath,), name='astronaut_walk_sprites1')
         sprite_slicer(24, 24, outputlist=linkedsprites, folders=(self.spritespath,), name='astronaut_die_sprites1')
-        self.astronautsprites = msr(self.window, images=linkedsprites)
+        self.astronautsprites = Msr(self.window, images=linkedsprites)
 
-        self.lasersprites = msr(self.window, folders=(self.spritespath,), names=("laser1",))
+        self.lasersprites = Msr(self.window, folders=(self.spritespath,), names=("laser1",))
         self.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
         entity.Laser.sprites = self.lasersprites
 
         linkedsprites.clear()
         sprite_slicer(6, 6, wpad=1, hpad=1, outputlist=linkedsprites, folders=(self.spritespath,), name='blood1')
-        self.bloodsprites = msr(self.window, images=linkedsprites)
+        self.bloodsprites = Msr(self.window, images=linkedsprites)
         self.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
         entity.Astronaut.bloodsprites = self.bloodsprites
 
@@ -690,45 +695,45 @@ class Game:
         particles.set_colorkey((163, 73, 164))
         linkedsprites.clear()
         sprite_slicer(7, 7, wpad=1, hpad=1, outputlist=linkedsprites, sprite=particles)
-        self.particlesprites = msr(self.window, images=linkedsprites)
+        self.particlesprites = Msr(self.window, images=linkedsprites)
         Particle.sprites = self.particlesprites
 
         self.starparticles = pygame.sprite.Group()
 
         exitB = pygame.image.load(os.path.join(self.spritespath, 'exit' + '.png')).convert()
         exitB.set_colorkey((163, 73, 164))
-        self.buttonsprites = msr(self.window, images=(exitB,))
+        self.buttonsprites = Msr(self.window, images=(exitB,))
         self.exitbutton = Button(sprites=self.buttonsprites, name=0, scale=(2, 2), offset=(-0.5, -0.5), popup=(1.06, 1.06))
 
         linkedsprites.clear()
         pauseB = pygame.image.load(os.path.join(self.spritespath, 'pause' + '.png')).convert()
         pauseB.set_colorkey((163, 73, 164))
         sprite_slicer(38, 20, outputlist=linkedsprites, sprite=pauseB)
-        self.pausesprites = msr(self.window, images=linkedsprites)
+        self.pausesprites = Msr(self.window, images=linkedsprites)
         self.pausebutton = Button(sprites=self.pausesprites, name=0, scale=(2, 2), pos=(0, 601), offset=(-0.5, 0.5), popup=(1.06, 1.06))
 
-        self.startsprites = msr(self.window, folders=(self.spritespath,), names=('start1', ))
+        self.startsprites = Msr(self.window, folders=(self.spritespath,), names=('start1',))
         self.startbutton = Button(sprites=self.startsprites, name=0, scale=(2, 2), pos=(512, 270),  offset=(0, 0), popup=(1.04, 1.04))
 
         soundbar = pygame.Surface((198, 16))
         soundbar.fill((255, 255, 255, 0))
-        self.soundsprites = msr(self.window, folders=(self.spritespath,), names=('sound', 'sound knob'), images=(soundbar,))
-        self.soundbutton = Button(sprites=self.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(self.sound, 0, 1, 531, 681), 370), offset=(0, 0), popup=(1.04, 1.04))
+        self.soundsprites = Msr(self.window, folders=(self.spritespath,), names=('sound', 'sound knob'), images=(soundbar,))
+        self.soundbutton = Button(sprites=self.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(self.soundvolume, 0, 1, 531, 681), 370), offset=(0, 0), popup=(1.04, 1.04))
 
         self.easteregg = False
-        self.eastereggsprite = msr(self.window, folders=(self.spritespath,), names=("easter egg",))
+        self.eastereggsprite = Msr(self.window, folders=(self.spritespath,), names=("easter egg",))
         self.eastereggknob = Button(sprites=self.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(self.scale, 0.5, 4, 84, 234), 370), offset=(0, 0), popup=(1.04, 1.04))
 
         linkedsprites.clear()
         sprite_slicer(144, 32, outputlist=linkedsprites, folders=(self.spritespath,), name='mobile_sprites1')
-        self.mobilesprites = msr(self.window, images=linkedsprites)
+        self.mobilesprites = Msr(self.window, images=linkedsprites)
         self.mobilebutton = Button(sprites=self.mobilesprites, name=self.mobile, scale=(2, 2), pos=(1014, 12), offset=(0.5, -0.5), popup=(1, 1))
 
-        self.text_menu = msr(self.window, folders=(self.spritespath,), names=("title", "credit farkas", "credit disa"))
+        self.text_menu = Msr(self.window, folders=(self.spritespath,), names=("title", "credit farkas", "credit disa"))
 
         linkedsprites.clear()
         sprite_slicer(59, 44, outputlist=linkedsprites, folders=(self.spritespath,), name='asteroid_sprites1')
-        self.asteroidsprites = msr(self.window, images=linkedsprites)
+        self.asteroidsprites = Msr(self.window, images=linkedsprites)
 
         self.menustars = pygame.sprite.Group()
 
@@ -751,54 +756,60 @@ class Game:
 
     def audio(self):
         #print('audio set')
-        pygame.mixer.music.set_volume(self.sound * 0.2)
+        pygame.mixer.music.set_volume(self.soundvolume * 0.2)
 
-        self.asteroidsound.set_volume(self.sound)
-        self.clearedsound.set_volume(self.sound*0.4)
+        self.asteroidsound.set_volume(self.soundvolume)
+        self.clearedsound.set_volume(self.soundvolume * 0.4)
 
         for sound in self.boxsounds:
-            sound.set_volume(self.sound*0.17)
+            sound.set_volume(self.soundvolume * 0.17)
         for sound in self.boxhitsounds:
-            sound.set_volume(self.sound*0.2)
+            sound.set_volume(self.soundvolume * 0.2)
 
         for sound in self.lasersounds:
-            sound.set_volume(self.sound*0.1)
+            sound.set_volume(self.soundvolume * 0.1)
         for sound in self.laserhitsounds:
-            sound.set_volume(self.sound*0.1)
+            sound.set_volume(self.soundvolume * 0.1)
 
     def events(self) -> float:
         # check for events
         fps_start = time.perf_counter()
-        self.key = -1
-        self.chargot = False
+
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                self.key = event.key
-            if event.type == pygame.TEXTINPUT:
-                self.char = event.text
-                self.chargot = True
+            if event.type == pygame.WINDOWRESIZED and not self.fullscreen:
+                self.winresolution = self.window.size
+
             if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            '''if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    exit()'''
+                self.quit()
+
         fps_end = time.perf_counter()
 
         self.keyboard = (self.keyboard[1], pygame.key.get_pressed())
-
         self.mouse = [self.mouse[1], pygame.mouse.get_pressed()]
-        mouse = pygame.Vector2(pygame.mouse.get_pos())
-        self.mousepos = (self.mousepos[1], mouse)
+
+        rect = self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size))
+
+        self.mousepos[0].update(self.mousepos[1])
+        self.mousepos[1].update(pygame.mouse.get_pos())
+        self.mousepos[1].x -= rect.x
+        self.mousepos[1].y -= rect.y
+        if not (self.mouse[1][0] or self.mouse[1][2] or self.mouse[1][1]):
+            self.mousepos[1].x = pygame.math.clamp(self.mousepos[1].x, 0, rect.w)
+            self.mousepos[1].y = pygame.math.clamp(self.mousepos[1].y, 0, rect.h)
+        self.mousepos[1].x *= self.logical_sizeRect.w / rect.w
+        self.mousepos[1].y *= self.logical_sizeRect.h / rect.h
+        self.mousepos[1].x = round(self.mousepos[1].x)
+        self.mousepos[1].y = round(self.mousepos[1].y)
+
+        Button.mouse = self.mouse
+        Button.mousepos = self.mousepos
+        Button.keyboard = self.keyboard
 
         self.mouseclicked = 0
         if self.mouse[1][0] and not self.mouse[0][0]:
             self.mouseclicked = 1
         if self.mouseclicked:
-            self.mouseclickpos = mouse
-
-        self.movement()
+            self.mouseclickpos = self.mousepos[1]
 
         return fps_end - fps_start
 
@@ -835,58 +846,106 @@ class Game:
 
         self.move = vect
 
+    def resize(self, scale=None):
+        if hasattr(platform, 'window'):
+            return
+
+        pygame.mouse.set_pos(0, 0)
+
+        if scale is None:
+            self.fullscreen = not self.fullscreen
+
+            if self.fullscreen:
+                self.window.set_fullscreen(True)
+            else:
+                self.window.set_windowed()
+                self.winresolution = self.window.size
+        else:
+            rect = pygame.Rect(*self.window.position, *self.window.size)
+
+            self.window.set_windowed()
+            self.fullscreen = False
+            self.winresolution = scale
+            self.window.size = scale
+
+            self.window.position = rect.centerx - self.window.size[0] / 2, rect.centery - self.window.size[1] / 2
+
+        rect = self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size))
+        pygame.mouse.set_pos(self.mousepos[1].x / 640 * rect.w + rect.x, self.mousepos[1].y / 360 * rect.h + rect.y)
+
+    def quit(self):
+        # print("Quiting game")
+
+        self.running = False
+
+        self.display.draw_color = "Black"
+        self.display.clear()
+        self.display.present()
+
+        if not hasattr(platform, 'window'):
+            self.display.target = None
+
     async def run(self):
         # start up
-        global dt
-        dt = 0.016
-        self.dt = dt
-        pygame.event.get()
-        self.key = -1
-        self.keyboard = (0, pygame.key.get_pressed())
-        self.mousepos = (0, pygame.Vector2(pygame.mouse.get_pos()))
-        mouse = pygame.Vector2(pygame.mouse.get_pos())
-        self.mouse = [pygame.mouse.get_pressed(), pygame.mouse.get_pressed()]
-        self.mouseclickpos = mouse
+        self.mousepos = (pygame.Vector2(0, 0), pygame.Vector2(0, 0))
+        self.keyboard = (pygame.key.get_pressed(), pygame.key.get_pressed())
+        self.mouse = (pygame.mouse.get_pressed(), pygame.mouse.get_pressed())
+        self.mouseclickpos = self.mousepos[1]
         self.mouseclicked = 0
+        self.events()
         frame = 0
 
-        while True:  # main loop
+        if self.fullscreen:
+            self.resize(self.winresolution)
+            self.resize()
+        else:
+            self.resize(self.winresolution)
+
+        while self.running:  # main loop
             fps_start = time.perf_counter()
 
-            self.window.fill((0, 0, 0, 0))
-
-            self.stateprev = (self.stateprev[1], self.stateloop)  # state handle
+            prevstate = Sm.state
 
             eventtime = self.events()
-            Button.input(1, self.mousepos, self.mouse)
-            Particle.dt = dt
 
-            #note 1
-            #msr.flip(self.window)  # debug draw   uncomment to see turned on debugs    v
+            # debug
+            if self.keys((pygame.K_f,))[0]:
+                self.resize((1024, 600) if self.fullscreen else None)
 
-            self.stateloop()  # run the currently set state
+            self.display.draw_color = (0, 40, 0, 0)
+            self.display.target = self.screen
+            Msr.screenrect = self.logical_sizeRect
+            self.display.clear()
 
-            msr.flip(self.window)  # main draw     comment out to see turned on debugs  ^
-            pygame.display.update()
+            Sm.states[Sm.state]()
+
+            self.display.target = None
+            Msr.screenrect = self.display.get_viewport()
+            self.display.draw_color = (0, 0, 0, 0)
+            self.display.clear()
+
+            self.screen.draw(dstrect=self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size)))
+
+            self.display.present()
+
+            Sm.prevstate = prevstate
 
             fps_end = time.perf_counter()
             dt = fps_end - fps_start - eventtime
 
             # debug fps
-            '''if frame % 8 == 0 and dt:
-                pygame.display.set_caption(f"FPS: {int(1 / dt)}, {round(self.clock.get_fps(), 1)}")
-            frame += 1'''
+            if frame % 8 == 0 and dt:
+                frame = 0
+                self.window.title = f"FPS: {int(1 / dt)}, {round(self.clock.get_fps(), 1)} W:{self.window.size[0]} {self.window.size[1]}"
+            frame += 1
 
             await asyncio.sleep(0)
             self.clock.tick(60)
-
             fps_end2 = time.perf_counter()
-            dt = fps_end2 - fps_start - eventtime
-            self.dt = dt
-            #print(self.clock.get_fps())
+            self.dt = min(fps_end2 - fps_start - eventtime, 0.1)
+            # print(self.clock.get_fps())
 
 
 if __name__ == '__main__':
-    global dt
-    game = Game()
-    asyncio.run(game.run())
+    app = App()
+    asyncio.run(app.run())

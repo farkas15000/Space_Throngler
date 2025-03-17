@@ -1,5 +1,5 @@
 import pygame
-from multi_sprite_renderer_normal import MultiSprite as msr
+from multi_sprite_renderer_hardware import MultiSprite as msr
 
 class Particle(pygame.sprite.Sprite):
     dt = None  # has to be set every frame!

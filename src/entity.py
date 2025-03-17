@@ -4,7 +4,7 @@ import random
 import pygame
 
 from buttons import Button
-from multi_sprite_renderer_normal import MultiSprite as msr
+from multi_sprite_renderer_hardware import MultiSprite as msr
 from particles import Particle
 
 
