@@ -5,7 +5,7 @@ class Particle(pygame.sprite.Sprite):
     dt = None  # has to be set every frame!
     sprites = None  # can hold a main msr containing all sprites to be used
 
-    def __init__(self, pos, sprites: msr, animation, velocity, scale=None, offset=None, rotation=0, turn=0):
+    def __init__(self, pos, sprites: msr, animation, velocity, scale=None, relativeOffset=None, rotation=0, turn=0):
         # animation = List where first element is the lifetime of the particle, others are sprite index numbers
         # velocity = moving direction, turn = turning speed
 
@@ -15,10 +15,10 @@ class Particle(pygame.sprite.Sprite):
             self.scale = [1, 1]
         else:
             self.scale = scale
-        if offset is None:
-            self.offset = [0, 0]
+        if relativeOffset is None:
+            self.relativeOffset = [0, 0]
         else:
-            self.offset = offset
+            self.relativeOffset = relativeOffset
         self.frame = 0
         self.animation = animation
         self._length = 1 / (len(self.animation) - 1)
@@ -44,7 +44,7 @@ class Particle(pygame.sprite.Sprite):
 
     def draw(self):
         self.rect = self.msr.draw(self.frame, pos=self.pos, scale=self.scale,
-                                  offset=self.offset, rotation=self.rotation, flip=(self.flipx, self.flipy))[2]
+                                  offset=self.relativeOffset, rotation=self.rotation, flip=(self.flipx, self.flipy))[2]
         if not self.rect[3]:
             self.kill()
 

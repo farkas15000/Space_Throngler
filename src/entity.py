@@ -71,7 +71,7 @@ class Box(Button, pygame.sprite.Sprite):
     def run(self):
         # land of chaos and fake physics
 
-        self.rects = self.sprites.rects(name=self.name, scale=(Button.winscale * self.xm, Button.winscale * self.ym), pos=self.pos, offset=self.offset)
+        self.rects = self.sprites.rects(name=self.name, scale=(Button.winscale * self.xm, Button.winscale * self.ym), pos=self.pos, offset=self.relativeOffset)
         self.rect = self.rects[0]
 
         # wall hit handle
@@ -225,7 +225,7 @@ class Box(Button, pygame.sprite.Sprite):
     def draw(self, rects=1):
         # box
         if rects:
-            self.rects = self.sprites.rects(name=self.name, scale=(Button.winscale * self.xm, Button.winscale * self.ym), pos=self.pos, offset=self.offset)
+            self.rects = self.sprites.rects(name=self.name, scale=(Button.winscale * self.xm, Button.winscale * self.ym), pos=self.pos, offset=self.relativeOffset)
         self.sprites.draw_only(name=self.name, rects=self.rects, scale=(Button.winscale * self.xm, Button.winscale * self.ym))
 
         # blood
@@ -234,7 +234,7 @@ class Box(Button, pygame.sprite.Sprite):
 
         # outline
         if (self.onnow and not self.falling and Box.holding is None) or Box.holding is self:
-            self.sprites.draw(name=4, scale=(Button.winscale * self.xm, Button.winscale * self.ym), pos=self.rects[0].center, offset=self.offset)
+            self.sprites.draw(name=4, scale=(Button.winscale * self.xm, Button.winscale * self.ym), pos=self.rects[0].center, offset=self.relativeOffset)
 
     def drawshadow(self):
         if not self.firstlanded:

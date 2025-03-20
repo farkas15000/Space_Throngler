@@ -665,7 +665,7 @@ class App:
 
             self.display.target = None
             Msr.screenrect = self.display.get_viewport()
-            self.display.draw_color = (0, 0, 0, 0)
+            self.display.draw_color = (10, 10, 10, 0)
             self.display.clear()
 
             self.screen.draw(dstrect=self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size)))
