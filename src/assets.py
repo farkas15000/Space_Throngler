@@ -43,6 +43,32 @@ def sprite_slicer(width, height, wpad=0, hpad=0, outputlist=None, folders=(), na
 class Assets:
 
     font_black = Msr()
+    font_white = Msr()
+    ship = Msr()
+    shade = Msr()
+    doorsprites = Msr()
+    rocketsprites = Msr()
+    monstersprites = Msr()
+    boxsprites = Msr()
+    astronautsprites = Msr()
+    lasersprites = Msr()
+    bloodsprites = Msr()
+    particlesprites = Msr()
+    buttonsprites = Msr()
+    pausesprites = Msr()
+    startsprites = Msr()
+    soundsprites = Msr()
+    eastereggsprite = Msr()
+    mobilesprites = Msr()
+    menu_texts_msr = Msr()
+    asteroidsprites = Msr()
+
+    asteroidsound: pygame.mixer.Sound
+    clearedsound: pygame.mixer.Sound
+    boxsounds: tuple[pygame.mixer.Sound]
+    boxhitsounds: tuple[pygame.mixer.Sound]
+    lasersounds: tuple[pygame.mixer.Sound]
+    laserhitsounds: tuple[pygame.mixer.Sound]
 
     @classmethod
     def makemsrs(cls):
@@ -51,7 +77,7 @@ class Assets:
         linkedsprites = []
 
         cls.font_black(folders=(fontpath,), font='VCR_OSD_MONO_1.001', size=21, color='Black')
-        cls.font_white = Msr( folders=(fontpath,), font='VCR_OSD_MONO_1.001', size=21)
+        cls.font_white = Msr(folders=(fontpath,), font='VCR_OSD_MONO_1.001', size=21)
 
         ship = pygame.image.load(os.path.join(spritespath, 'ship5' + '.png'))
         ship.set_colorkey(colorkey)
@@ -95,7 +121,6 @@ class Assets:
         cls.astronautsprites = Msr(images=linkedsprites)
 
         cls.lasersprites = Msr(folders=(spritespath,), names=("laser1",))
-        #cls.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
 
         linkedsprites.clear()
         sprite_slicer(6, 6, wpad=1, hpad=1, outputlist=linkedsprites, folders=(spritespath,), name='blood1')
@@ -106,7 +131,6 @@ class Assets:
         linkedsprites.clear()
         sprite_slicer(7, 7, wpad=1, hpad=1, outputlist=linkedsprites, sprite=particles)
         cls.particlesprites = Msr(images=linkedsprites)
-
 
         exitB = pygame.image.load(os.path.join(spritespath, 'exit' + '.png'))
         exitB.set_colorkey(colorkey)

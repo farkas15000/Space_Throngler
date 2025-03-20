@@ -23,6 +23,8 @@ from particles import Particle
 from monster import Monster
 import entity
 from BVH import BVH
+
+import menu
 print('_SDL2 rendering')
 
 
@@ -102,7 +104,7 @@ class App:
         self.screen = Texture(self.display, self.logical_sizeRect.size, target=True)
         Msr.setScreen(self.display)
 
-        self.states = {'menu': self.menu,
+        self.states = {
                        'game': self.game,
                        'scene': self.scene,
                        'pause': self.pause,
@@ -110,6 +112,7 @@ class App:
                        }
 
         self.dt = 0.016
+        self.scale = 1
         self.running = True
 
         Button.controls = self.controls
@@ -120,101 +123,7 @@ class App:
         Sm.app = self
         Sm.state = 'menu'
         Sm.states['game'] = None
-
-    def menu(self):
-        if self.stateprev[0] != self.stateloop:
-            #print('menu')
-            self.startimer = 0
-            self.menustartimer = 0
-            self.trailtimer = 0
-            self.asteroidrot = 23
-
-            self.exitbutton.scale = (3, 3)
-
-        self.startimer -= self.dt
-        self.stars()
-
-        self.menustartimer -= self.dt
-        if self.menustartimer <= 0:
-            self.menustartimer = random.uniform(0.2, 0.5)
-            self.menustarsadd()
-        self.menustars.update()
-
-
-        self.trailtimer -= self.dt
-        if self.trailtimer <= 0:
-            self.trailtimer = random.uniform(0.05, 0.1)
-            for z in range(5):
-                rot = random.randint(160, 200)
-                trail = Particle(pos=(880+random.randint(-20, 20), 305+random.randint(-40, 40)), sprites=self.particlesprites,
-                                 animation=(random.uniform(0.3, 0.45), 4),
-                                 velocity=pygame.Vector2(random.randint(280, 320), 0).rotate(-rot),
-                                 scale=(4, 4), rotation=rot+180)
-                self.menustars.add(trail)
-
-        self.asteroidrot -= 45 * self.dt
-        asteroid = self.asteroidsprites.draw(0, scale=(3, 3), pos=(880, 305), offset=(0, 0), rotation=self.asteroidrot)[0]
-        if self.mouseclicked and self.easteregg < 10 and asteroid.collidepoint(self.mousepos[1]):
-            self.easteregg += 1
-            self.clearedsound.play()
-
-        if self.easteregg >= 10:
-            self.eastereggsprite.draw(0, scale=(2, 2), pos=(120, 235))
-            self.soundsprites.draw(2, scale=(1, 1), pos=(60, 370), offset=(-0.5, 0))
-            self.eastereggknob.update()
-            if self.eastereggknob.grabbed:
-                posx = self.eastereggknob.pos.x
-                self.eastereggknob.pos.x = pygame.math.clamp(self.mousepos[1][0], 84, 234)
-                if posx != self.eastereggknob.pos.x:
-                    self.scale = round(map_value(self.eastereggknob.pos.x, 84, 234, 0.5, 4), 1)
-            self.font_white.write(f'Size:{round(self.scale, 1)}x', scale=(2, 2), pos=(52, 400))
-
-        self.text_menu.draw(0, scale=(3, 3), pos=(512, 150), offset=(0, 0))
-        self.text_menu.draw(1, scale=(2, 2), pos=(512, 480), offset=(0, 0))
-        self.text_menu.draw(2, scale=(2, 2), pos=(512, 540), offset=(0, 0))
-
-        eyepos = pygame.Vector2(599, 151)
-        offset = -eyepos + self.mousepos[1]
-        if offset:
-            offset = offset.normalize() * 3
-        offset.x *= 1.4
-        self.monstersprites.draw(name=1, scale=(1.6, 1.6), pos=eyepos+offset, offset=(0, 0))
-
-        self.exitbutton.update()
-        self.startbutton.update()
-
-        self.soundsprites.draw(0, scale=(1.6, 1.6), pos=(475, 370), offset=(0.5, 0))
-        self.soundsprites.draw(2, scale=(1, 1), pos=(507, 370), offset=(-0.5, 0))
-
-        self.soundbutton.update()
-        if self.soundbutton.grabbed:
-            posx = self.soundbutton.pos.x
-            self.soundbutton.pos.x = pygame.math.clamp(self.mousepos[1][0], 531, 681)
-            if posx != self.soundbutton.pos.x:
-                self.soundvolume = map_value(self.soundbutton.pos.x, 531, 681, 0, 1)
-                self.audio()
-        if self.keys((self.controls['Left'], pygame.K_LEFT, self.controls['Down'], pygame.K_DOWN))[0]:
-            self.soundvolume -= 0.05
-            self.soundvolume = max(self.soundvolume, 0)
-            self.audio()
-            self.soundbutton.pos.x = map_value(self.soundvolume, 0, 1, 531, 681)
-        if self.keys((self.controls['Right'], pygame.K_RIGHT, self.controls['Up'], pygame.K_UP))[0]:
-            self.soundvolume += 0.05
-            self.soundvolume = min(self.soundvolume, 1)
-            self.audio()
-            self.soundbutton.pos.x = map_value(self.soundvolume, 0, 1, 531, 681)
-
-        self.mobilebutton.update()
-        if self.mobilebutton.clicked:
-            self.mobile = not self.mobile
-            self.mobilebutton.name = self.mobile
-
-        if self.keys((self.controls['Esc'],))[0] or self.exitbutton.clicked:
-            pygame.quit()
-            exit()
-
-        if self.keys((self.controls['Ok'], pygame.K_RETURN))[0] or self.startbutton.clicked:
-            self.stateloop = self.states['scene']
+        Sm.loadin()
 
     def scene(self):
         if self.stateprev[0] != self.stateloop:
@@ -578,43 +487,6 @@ class App:
             self.doorsprites.draw(name=k, pos=x)
             k += 1
 
-    def stars(self):
-        self.starparticles.update('loop')
-        if self.startimer <= 0:
-            self.startimer = random.uniform(0.8, 1)
-            speedrange = (40, 60)
-
-            for star in ((1040, 15, 25, 1040, 42, 180), (1040, 575, 585, 1040, 420, 558), (446, 15, 25, 40, 42, 190), (446, 575, 585, 40, 410, 558)):
-                speed = random.randint(*speedrange)
-                particle = Particle(pos=(star[0], random.randint(star[1], star[2])), sprites=Particle.sprites,
-                                    animation=(460 / speed, 1 + random.randrange(3)),
-                                    velocity=(-speed, 0),
-                                    scale=(2, 2), rotation=random.randrange(10) * 36 + 6,
-                                    offset=(random.uniform(-1, 1), random.uniform(-1, 1)))
-                self.starparticles.add(particle)
-
-                for z in range(2):
-                    speed = random.randint(*speedrange)
-                    particle = Particle(pos=(star[3], random.randint(star[4], star[5])), sprites=Particle.sprites,
-                                        animation=(55/speed, 1+random.randrange(3)),
-                                        velocity=(-speed, 0),
-                                        scale=(2, 2), rotation=random.randrange(10) * 36+15,
-                                        offset=(random.uniform(-1, 1), random.uniform(-1, 1)))
-                    self.starparticles.add(particle)
-
-            #print(len(self.starparticles))
-
-    def menustarsadd(self, preload=False):
-
-        speed = random.randint(40, 60)
-        particle = Particle(pos=(random.randint(15, 1009) if preload else 1040, random.randint(5, 595)), sprites=Particle.sprites,
-                            animation=(1080 / speed, 1 + random.randrange(3)),
-                            velocity=(-speed, 0),
-                            scale=(2, 2), rotation=random.randrange(10) * 36 + 15,
-                            offset=(random.uniform(-1, 1), random.uniform(-1, 1)))
-        self.menustars.add(particle)
-
-
     def rocket(self):
         if self.rockettimer <= 0:
             self.rockettimer = random.uniform(0.02, 0.1)
@@ -628,148 +500,18 @@ class App:
                 self.laserparticles.add(particle)
 
     def loadin(self):
-        # load in all assets, set sound volume
+        # Todo
 
-        #print('loadin')
-        self.stateloop = self.states['menu']
-
-        linkedsprites = []
-
-        self.font_black = Msr(self.window, folders=(self.fontpath,), font='VCR_OSD_MONO_1.001', size=21, color='Black')
-        self.font_white = Msr(self.window, folders=(self.fontpath,), font='VCR_OSD_MONO_1.001', size=21)
-
-        ship = pygame.image.load(os.path.join(self.spritespath, 'ship5' + '.png')).convert()
-        ship.set_colorkey((163, 73, 164))
-        ship.fill((234, 234, 234, 0), (50, 18, 412, 264))
-        ship = pygame.transform.scale_by(ship, 2)
-        self.ship = Msr(self.window, images=(ship,), alpha=1)
-
-        shade = pygame.Surface((1024, 600))
-        self.shade = Msr(self.window, images=(shade,), alpha=0.7)
-
-        doors = pygame.image.load(os.path.join(self.spritespath, 'doors1' + '.png')).convert()
-        doors.set_colorkey((163, 73, 164))
-        doors = pygame.transform.scale_by(doors, 2)
-        linkedsprites.clear()
-        sprite_slicer(30*2, 36*2, wpad=2*2, outputlist=linkedsprites, sprite=doors)
-        self.doorsprites = Msr(self.window, images=linkedsprites)
-
-        rocket = pygame.image.load(os.path.join(self.spritespath, 'rocket' + '.png')).convert()
-        rocket.set_colorkey((163, 73, 164))
-        rocket = pygame.transform.scale_by(rocket, 2)
-        self.rocketsprites = Msr(self.window, images=(rocket,))
-
-        self.scale = 1.0
-        healthbox = pygame.Surface((32, 8))
-        healthbox.fill((255, 255, 255, 0), (1, 1, 30, 6))
-        health = pygame.Surface((32, 8))
-        health.fill((163, 73, 164))
-        health.set_colorkey((163, 73, 164))
-        health.fill((138, 15, 52), (1, 1, 30, 6))
-        self.monstersprites = Msr(self.window, folders=(self.spritespath,), names=("head", "eye", "limb", "joint"), images=(healthbox, health))
-
-        linkedsprites.clear()
-        sprite_slicer(22, 22, outputlist=linkedsprites, folders=(self.spritespath,), name='box_sprites1')
-        boxoutline = pygame.image.load(os.path.join(self.spritespath, 'boxoutline' + '.png')).convert()
-        boxoutline.set_colorkey((163, 73, 164))
-        linkedsprites.append(boxoutline)
-        sprite_slicer(22, 22, outputlist=linkedsprites, folders=(self.spritespath,), name='box_shadow_sprites')
-        self.boxsprites = Msr(self.window, images=linkedsprites)
-
-        linkedsprites.clear()
-        sprite_slicer(24, 24, outputlist=linkedsprites, folders=(self.spritespath,), name='astronaut_walk_sprites1')
-        sprite_slicer(24, 24, outputlist=linkedsprites, folders=(self.spritespath,), name='astronaut_die_sprites1')
-        self.astronautsprites = Msr(self.window, images=linkedsprites)
-
-        self.lasersprites = Msr(self.window, folders=(self.spritespath,), names=("laser1",))
         self.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
         entity.Laser.sprites = self.lasersprites
 
-        linkedsprites.clear()
-        sprite_slicer(6, 6, wpad=1, hpad=1, outputlist=linkedsprites, folders=(self.spritespath,), name='blood1')
-        self.bloodsprites = Msr(self.window, images=linkedsprites)
         self.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
         entity.Astronaut.bloodsprites = self.bloodsprites
 
-        particles = pygame.image.load(os.path.join(self.spritespath, 'particles1' + '.png')).convert()
-        particles.set_colorkey((163, 73, 164))
-        linkedsprites.clear()
-        sprite_slicer(7, 7, wpad=1, hpad=1, outputlist=linkedsprites, sprite=particles)
-        self.particlesprites = Msr(self.window, images=linkedsprites)
-        Particle.sprites = self.particlesprites
-
-        self.starparticles = pygame.sprite.Group()
-
-        exitB = pygame.image.load(os.path.join(self.spritespath, 'exit' + '.png')).convert()
-        exitB.set_colorkey((163, 73, 164))
-        self.buttonsprites = Msr(self.window, images=(exitB,))
-        self.exitbutton = Button(sprites=self.buttonsprites, name=0, scale=(2, 2), offset=(-0.5, -0.5), popup=(1.06, 1.06))
-
-        linkedsprites.clear()
-        pauseB = pygame.image.load(os.path.join(self.spritespath, 'pause' + '.png')).convert()
-        pauseB.set_colorkey((163, 73, 164))
-        sprite_slicer(38, 20, outputlist=linkedsprites, sprite=pauseB)
-        self.pausesprites = Msr(self.window, images=linkedsprites)
         self.pausebutton = Button(sprites=self.pausesprites, name=0, scale=(2, 2), pos=(0, 601), offset=(-0.5, 0.5), popup=(1.06, 1.06))
 
-        self.startsprites = Msr(self.window, folders=(self.spritespath,), names=('start1',))
-        self.startbutton = Button(sprites=self.startsprites, name=0, scale=(2, 2), pos=(512, 270),  offset=(0, 0), popup=(1.04, 1.04))
-
-        soundbar = pygame.Surface((198, 16))
-        soundbar.fill((255, 255, 255, 0))
-        self.soundsprites = Msr(self.window, folders=(self.spritespath,), names=('sound', 'sound knob'), images=(soundbar,))
-        self.soundbutton = Button(sprites=self.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(self.soundvolume, 0, 1, 531, 681), 370), offset=(0, 0), popup=(1.04, 1.04))
-
-        self.easteregg = False
-        self.eastereggsprite = Msr(self.window, folders=(self.spritespath,), names=("easter egg",))
-        self.eastereggknob = Button(sprites=self.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(self.scale, 0.5, 4, 84, 234), 370), offset=(0, 0), popup=(1.04, 1.04))
-
-        linkedsprites.clear()
-        sprite_slicer(144, 32, outputlist=linkedsprites, folders=(self.spritespath,), name='mobile_sprites1')
-        self.mobilesprites = Msr(self.window, images=linkedsprites)
-        self.mobilebutton = Button(sprites=self.mobilesprites, name=self.mobile, scale=(2, 2), pos=(1014, 12), offset=(0.5, -0.5), popup=(1, 1))
-
-        self.text_menu = Msr(self.window, folders=(self.spritespath,), names=("title", "credit farkas", "credit disa"))
-
-        linkedsprites.clear()
-        sprite_slicer(59, 44, outputlist=linkedsprites, folders=(self.spritespath,), name='asteroid_sprites1')
-        self.asteroidsprites = Msr(self.window, images=linkedsprites)
-
-        self.menustars = pygame.sprite.Group()
-
-        for x in range(60):
-            self.menustarsadd(True)
-
-        pygame.mixer.music.load(os.path.join(self.audiopath, 'space.ogg'))
-
-        self.asteroidsound = pygame.mixer.Sound(f'{self.audiopath}/crash.ogg')
-        self.clearedsound = pygame.mixer.Sound(f'{self.audiopath}/cleared.ogg')
-        self.boxsounds = tuple(pygame.mixer.Sound(f'{self.audiopath}/box{x + 1}.ogg') for x in range(4))
-        self.boxhitsounds = tuple(pygame.mixer.Sound(f'{self.audiopath}/boxhit{x + 1}.ogg') for x in range(4))
-        self.lasersounds = tuple(pygame.mixer.Sound(f'{self.audiopath}/laserShoot_{x+1}_.ogg') for x in range(4))
         entity.Laser.sounds = self.lasersounds
-        self.laserhitsounds = tuple(pygame.mixer.Sound(f'{self.audiopath}/hitHurt_{x + 1}_.ogg') for x in range(4))
         entity.Laser.hitsounds = self.laserhitsounds
-
-        self.audio()
-        pygame.mixer.music.play(-1)
-
-    def audio(self):
-        #print('audio set')
-        pygame.mixer.music.set_volume(self.soundvolume * 0.2)
-
-        self.asteroidsound.set_volume(self.soundvolume)
-        self.clearedsound.set_volume(self.soundvolume * 0.4)
-
-        for sound in self.boxsounds:
-            sound.set_volume(self.soundvolume * 0.17)
-        for sound in self.boxhitsounds:
-            sound.set_volume(self.soundvolume * 0.2)
-
-        for sound in self.lasersounds:
-            sound.set_volume(self.soundvolume * 0.1)
-        for sound in self.laserhitsounds:
-            sound.set_volume(self.soundvolume * 0.1)
 
     def events(self) -> float:
         # check for events
@@ -912,10 +654,12 @@ class App:
             if self.keys((pygame.K_f,))[0]:
                 self.resize((1024, 600) if self.fullscreen else None)
 
-            self.display.draw_color = (0, 40, 0, 0)
+            self.display.draw_color = (0, 0, 0, 0)
             self.display.target = self.screen
             Msr.screenrect = self.logical_sizeRect
             self.display.clear()
+
+            Particle.dt = self.dt
 
             Sm.states[Sm.state]()
 
