@@ -1,6 +1,5 @@
 import pygame
 from engine import StateMachine as Sm
-from engine import Camera
 from buttons import Button
 
 from assets import Assets

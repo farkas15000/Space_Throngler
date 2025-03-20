@@ -80,8 +80,8 @@ class Assets:
         cls.font_white = Msr(folders=(fontpath,), font='VCR_OSD_MONO_1.001', size=21)
 
         ship = pygame.image.load(os.path.join(spritespath, 'ship5' + '.png'))
+        ship.fill((234, 234, 234, 255), (50, 18, 412, 264))
         ship.set_colorkey(colorkey)
-        ship.fill((234, 234, 234, 0), (50, 18, 412, 264))
         ship = pygame.transform.scale_by(ship, 2)
         cls.ship = Msr(images=(ship,))
 
@@ -100,7 +100,7 @@ class Assets:
         cls.rocketsprites = Msr(images=(rocket,))
 
         healthbox = pygame.Surface((32, 8))
-        healthbox.fill((255, 255, 255, 0), (1, 1, 30, 6))
+        healthbox.fill((255, 255, 255, 255), (1, 1, 30, 6))
         health = pygame.Surface((32, 8))
         health.fill(colorkey)
         health.set_colorkey(colorkey)
@@ -145,7 +145,7 @@ class Assets:
         cls.startsprites = Msr(folders=(spritespath,), names=('start1',))
 
         soundbar = pygame.Surface((198, 16))
-        soundbar.fill((255, 255, 255, 0))
+        soundbar.fill((255, 255, 255, 255))
         cls.soundsprites = Msr(folders=(spritespath,), names=('sound', 'sound knob'),
                                 images=(soundbar,))
 

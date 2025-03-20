@@ -16,6 +16,7 @@ class Menu:
     def __init__(self):
         Sm.loadins.append(self.load)
         Sm.states.update({'menu': self.menu,
+                          'menu_instance': self
                           })
 
     def load(self):

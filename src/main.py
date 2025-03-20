@@ -24,7 +24,8 @@ from monster import Monster
 import entity
 from BVH import BVH
 
-import menu
+import menu, scene  # IMPORTANT!
+
 print('_SDL2 rendering')
 
 
@@ -106,9 +107,7 @@ class App:
 
         self.states = {
                        'game': self.game,
-                       'scene': self.scene,
                        'pause': self.pause,
-                       'loadin': self.loadin,
                        }
 
         self.dt = 0.016
@@ -122,62 +121,7 @@ class App:
 
         Sm.app = self
         Sm.state = 'menu'
-        Sm.states['game'] = None
         Sm.loadin()
-
-    def scene(self):
-        if self.stateprev[0] != self.stateloop:
-            self.scenetimer = 0
-            self.rockettimer = 0
-            self.laserparticles = pygame.sprite.Group()  # for rocket
-
-            self.boxes = pygame.sprite.Group()
-            self.boxparticles = pygame.sprite.Group()
-            entity.Box.particles = self.boxparticles
-
-            self.asteroid = [pygame.Vector2(100, -100), -30]
-
-        self.scenetimer += self.dt
-
-        if self.scenetimer >= 1.1 and len(self.boxes) < 3:
-            self.boxes.add(entity.Box(self.boxsprites, self.boxsounds, self.boxhitsounds))
-
-        self.startimer -= self.dt
-        self.stars()
-        self.starparticles.update()
-
-        self.ship.draw()
-
-        self.boxes.update('shadow')
-
-        self.boxparticles.update()
-        for particle in self.boxparticles:
-            particle.velocity.y += 120 * self.dt
-
-        self.boxes.update('draw')
-        entity.Box.tentacle(self.dt, ((-100, -100), (100, 100)), copy.deepcopy(self.mouse), False)
-        self.boxes.update()
-
-        self.asteroidsprites.draw(0, scale=(2, 2), pos=self.asteroid[0], offset=(0, 0), rotation=self.asteroid[1])
-        reached = self.asteroid[0]!=(self.width / 2, self.height / 2)
-        self.asteroid[0].move_towards_ip((self.width / 2, self.height / 2), 500 * self.dt)
-        if self.asteroid[0] != (self.width / 2, self.height / 2):
-            self.asteroid[1] += -290 * self.dt
-        if reached and self.asteroid[0]==(self.width / 2, self.height / 2):
-            self.asteroidsound.play()
-
-        self.rockettimer -= self.dt
-        self.rocket()
-        self.laserparticles.update()
-
-        self.rocketsprites.draw(0, pos=(28, 208))
-
-        if self.scenetimer <= 0.3:
-            self.monstersprites.draw(name=2, scale=(64, 38))
-            self.font_white.write('! ALERT !', scale=(5, 5), pos=(240, 300), offset=(0, 0.5))
-
-        if self.scenetimer >= 1.6:
-            self.stateloop = self.states['game']
 
     def game(self):
         if self.stateprev[0] != self.stateloop and self.stateprev[0] != self.states['pause']:
