@@ -6,6 +6,7 @@ import pygame
 from buttons import Button
 from multi_sprite_renderer_hardware import MultiSprite as msr
 from particles import Particle
+from assets import Assets
 
 
 def dotsrot(start: pygame.math.Vector2, end: pygame.math.Vector2):
@@ -71,7 +72,7 @@ class Box(Button, pygame.sprite.Sprite):
     def run(self):
         # land of chaos and fake physics
 
-        self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, offset=self.relativeOffset)
+        self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, relativeOffset=self.relativeOffset)
         self.rect = self.rects[0]
 
         # wall hit handle
@@ -182,10 +183,10 @@ class Box(Button, pygame.sprite.Sprite):
         self.kill()
 
         for z in range(random.randrange(8, 10)):
-            particle = Particle(pos=self.pos, sprites=Particle.sprites,
+            particle = Particle(pos=self.pos, sprites=Assets.particlesprites,
                                 animation=(0.8, 20+random.randrange(5)),
                                 velocity=pygame.Vector2(-random.randint(50, 70), 0).rotate((random.randint(0, 180))),
-                                scale=(2, 2), rotation=random.randrange(10)*36, offset=(random.uniform(-1, 1), random.uniform(-1, 1)) , turn=random.randint(-60, 60))
+                                scale=(2, 2), rotation=random.randrange(10)*36, relativeOffset=(random.uniform(-1, 1), random.uniform(-1, 1)) , turn=random.randint(-60, 60))
             Box.particles.add(particle)
 
     def wind(self):
@@ -194,7 +195,7 @@ class Box(Button, pygame.sprite.Sprite):
 
             vel = aim.normalize().rotate(random.randint(-10, 10))*random.randint(200, 300)
 
-            particle = Particle(pos=self.pos+(random.randint(-11, 11), random.randint(-11, 11)), sprites=Particle.sprites,
+            particle = Particle(pos=self.pos+(random.randint(-11, 11), random.randint(-11, 11)), sprites=Assets.particlesprites,
                                 animation=(0.15, 2),
                                 velocity=vel,
                                 scale=(3, 3), rotation=dotsrot(vel, pygame.Vector2(1, 0)))
@@ -225,25 +226,24 @@ class Box(Button, pygame.sprite.Sprite):
     def draw(self, rects=1):
         # box
         if rects:
-            self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, offset=self.relativeOffset)
+            self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, relativeOffset=self.relativeOffset)
         self.sprites.draw_only(name=self.name, rects=self.rects, scale=(self.xm, self.ym))
 
         # blood
         for blood in self.bleeds:
-            Astronaut.bloodsprites.draw(name=blood[0], scale=(2.5, 2.5), pos=self.pos+blood[1], rotation=blood[2], flip=blood[3])
+            Assets.bloodsprites.draw(name=blood[0], scale=(2.5, 2.5), pos=self.pos+blood[1], rotation=blood[2], flip=blood[3])
 
         # outline
         if (self.onnow and not self.falling and Box.holding is None) or Box.holding is self:
-            self.sprites.draw(name=4, scale=(self.xm, self.ym), pos=self.rects[0].center, offset=self.relativeOffset)
+            self.sprites.draw(name=4, scale=(self.xm, self.ym), pos=self.rects[0].center, relativeOffset=self.relativeOffset)
 
     def drawshadow(self):
         if not self.firstlanded:
             self.sprites.draw(name=5 + round(((self.pos.y - self.target.y) / (self.target.y + 30) + 1) * 9),
-                              scale=(self.xm, self.ym), pos=self.target, offset=(0, 0))
+                              scale=(self.xm, self.ym), pos=self.target, relativeOffset=(0, 0))
 
 class Astronaut(pygame.sprite.Sprite):
     monster = None
-    bloodsprites: msr = None
     deathanim = None
     died = 0
 
@@ -258,7 +258,7 @@ class Astronaut(pygame.sprite.Sprite):
         self.target = pygame.Vector2(self.pos + pygame.Vector2((1 if (flipx := self.pos.x < self.monster.pos.x) else -1)*70, random.randrange(-30, 30)))
         self.distance = self.pos.distance_to(self.target)
         self.chainstart = self.target.copy()
-        self.chain = Chain(self.msr.renderer, self.chainstart, 10, 180, 5)  # super complicated movement tech
+        self.chain = Chain(self.chainstart, 10, 180, 5)  # super complicated movement tech
         self.speed = 5
         self.health = health
         self.damage = damage
@@ -268,7 +268,7 @@ class Astronaut(pygame.sprite.Sprite):
                           }
         self.animtimer = random.random()
         self.flipx = not flipx
-        self.rects = self.msr.rects(name=self.frame, scale=(self.scale, self.scale), pos=self.pos, offset=(0, 0))
+        self.rects = self.msr.rects(name=self.frame, scale=(self.scale, self.scale), pos=self.pos, relativeOffset=(0, 0))
         self.rect = self.rects[0]
         self.bloodtimer = 0
         self.shoottimer = random.random()+1
@@ -294,7 +294,7 @@ class Astronaut(pygame.sprite.Sprite):
         self.pos.move_towards_ip(self.target, self.speed * dt * 10)
 
         self.distance = self.pos.distance_to(self.target)
-        self.rects = self.msr.rects(name=self.frame, scale=(self.scale, self.scale), pos=self.pos, offset=(0, 0))
+        self.rects = self.msr.rects(name=self.frame, scale=(self.scale, self.scale), pos=self.pos, relativeOffset=(0, 0))
         self.rect = self.rects[0]
 
         self.shoot()
@@ -339,7 +339,7 @@ class Astronaut(pygame.sprite.Sprite):
             self.shoottimer = random.random()+1  # recharge
 
             for z in range(8):
-                particle = Particle(pos=self.pos + (-8 if self.flipx else 8, -2), sprites=Particle.sprites,
+                particle = Particle(pos=self.pos + (-8 if self.flipx else 8, -2), sprites=Assets.particlesprites,
                                     animation=(0.24, 10, 10, 11, 12, 13),
                                     velocity=pygame.Vector2(-150 if self.flipx else 150, 0).rotate((random.randint(-10, 10))),
                                     scale=(2, 2), rotation=random.randrange(10) * 36)
@@ -360,7 +360,7 @@ class Astronaut(pygame.sprite.Sprite):
         self.msr.draw_only(name=self.frame, rects=self.rects, scale=(self.scale, self.scale), flip=(self.flipx, 0))
 
         for blood in self.bleeds:
-            Astronaut.bloodsprites.draw(name=blood[0], scale=(self.scale, self.scale), pos=self.pos+blood[1], rotation=blood[2], flip=blood[3])
+            Assets.bloodsprites.draw(name=blood[0], scale=(self.scale, self.scale), pos=self.pos+blood[1], rotation=blood[2], flip=blood[3])
 
         # debug
         #self.chain.draw()
@@ -412,7 +412,7 @@ class Astronaut(pygame.sprite.Sprite):
 
                         if self.bloodtimer <= 0:
                             self.bloodtimer = random.uniform(0.05, 0.1)
-                            blood = Particle(pos=self.pos + (random.uniform(-4 * self.scale, 4 * self.scale), random.uniform(-4 * self.scale, 5 * self.scale)), sprites=Particle.sprites,
+                            blood = Particle(pos=self.pos + (random.uniform(-4 * self.scale, 4 * self.scale), random.uniform(-4 * self.scale, 5 * self.scale)), sprites=Assets.particlesprites,
                                              animation=(0.3, 19, 19, 18),
                                              velocity=pygame.Vector2(100, 0).rotate(rot := (random.randrange(360))),
                                              scale=(2, 2), rotation=rot)
@@ -433,13 +433,13 @@ class Astronaut(pygame.sprite.Sprite):
                             item.bleeds.pop(0)
 
                         for z in range(round(item.speed/7.5)):
-                            blood = Particle(pos=self.pos + (random.uniform(-4 * self.scale, 4 * self.scale), random.uniform(-4 * self.scale, 5 * self.scale)), sprites=Particle.sprites,
+                            blood = Particle(pos=self.pos + (random.uniform(-4 * self.scale, 4 * self.scale), random.uniform(-4 * self.scale, 5 * self.scale)), sprites=Assets.particlesprites,
                                              animation=(0.4, 19, 19, 18), velocity=pygame.Vector2(100, 0).rotate(rot := (random.randrange(360))), scale=(2, 2), rotation=rot)
                             Laser.particles.add(blood)
 
                         for z in range(3):
                             blood = Particle(pos=self.pos + (random.uniform(-7 * self.scale, 7 * self.scale), random.uniform(-5 * self.scale, 9 * self.scale)),
-                                             sprites=Astronaut.bloodsprites,
+                                             sprites=Assets.bloodsprites,
                                              animation=(random.uniform(10, 13), random.randrange(6)),
                                              velocity=pygame.Vector2(),
                                              scale=(3, 3), rotation=random.randrange(360))
@@ -460,26 +460,23 @@ class Astronaut(pygame.sprite.Sprite):
 
 class Laser(pygame.sprite.Sprite):
     group = None
-    sprites = None
     particles = None
-    sounds = None
-    hitsounds = None
 
     def __init__(self, pos, damage):
         # wallrect is at sprite load in loadin
         super().__init__()
         Laser.group.add(self)
         self.scale = 2
-        self.msr = Laser.sprites
+        self.msr = Assets.lasersprites
         self.damage = damage
         self.speed = 25
         self.pos = pos.copy()
         aimrand = pygame.Vector2(random.randrange(16), 0).rotate(random.randrange(360))
         self.rotation = dotsrot(Astronaut.monster.pos+aimrand, self.pos)
         self.direction: pygame.Vector2 = Astronaut.monster.pos+aimrand - self.pos
-        self.rects = self.msr.rects(name=0, scale=(self.scale, self.scale), pos=self.pos, offset=(0, 0), rotation=self.rotation)
+        self.rects = self.msr.rects(name=0, scale=(self.scale, self.scale), pos=self.pos, relativeOffset=(0, 0), rotation=self.rotation)
         self.rect = self.rects[2]
-        random.choice(Laser.sounds).play()
+        random.choice(Assets.lasersounds).play()
         if self.direction:
             self.direction.normalize_ip()
         else:
@@ -497,7 +494,7 @@ class Laser(pygame.sprite.Sprite):
 
         self.pos += self.direction * self.speed * dt * 10
 
-        self.rects = self.msr.rects(name=0, scale=(self.scale, self.scale), pos=self.pos, offset=(0, 0),
+        self.rects = self.msr.rects(name=0, scale=(self.scale, self.scale), pos=self.pos, relativeOffset=(0, 0),
                                     rotation=self.rotation)
         self.rect = self.rects[2]
 
@@ -513,12 +510,12 @@ class Laser(pygame.sprite.Sprite):
         self.kill()
 
         for z in range(random.randrange(6, 8)):
-            particle = Particle(pos=self.pos+self.direction*self.speed*Particle.dt*20, sprites=Particle.sprites,
+            particle = Particle(pos=self.pos+self.direction*self.speed*Particle.dt*20, sprites=Assets.particlesprites,
                                 animation=(0.1, 10, 11, 12, 13), velocity=(self.direction*-200).rotate((random.randint(-100, 100))), scale=(2, 2), rotation=random.randrange(10)*36)
             Laser.particles.add(particle)
 
         if self.rects[3]:
-            random.choice(Laser.hitsounds).play()
+            random.choice(Assets.laserhitsounds).play()
 
     def collision(self, hits):
         pass
@@ -526,8 +523,7 @@ class Laser(pygame.sprite.Sprite):
 
 class Chain():
 
-    def __init__(self, renderer, end, length, rot, links, start=None, scale=1.0):
-        self.renderer = renderer
+    def __init__(self, end, length, rot, links, start=None, scale=1.0):
         self.scale = scale
         self.timer = 0
         self.length = length * self.scale
@@ -571,6 +567,7 @@ class Chain():
 
         #self.draw()
 
+    """
     def draw(self):
         # just debug, no sprites
 
@@ -582,3 +579,4 @@ class Chain():
         pygame.draw.rect(self.renderer, (0, 255, 0, 0), cord, width=0)
         cord.center = self.startpos
         pygame.draw.rect(self.renderer, (0, 0, 255, 0), cord, width=0)
+    """

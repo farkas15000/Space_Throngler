@@ -45,7 +45,7 @@ class Menu:
 
     def menu(self):
         if Sm.prevstate != "menu":
-            print('menu')
+            #print('menu')
             self.startimer = 0
             self.menustartimer = 0
             self.trailtimer = 0
@@ -191,6 +191,3 @@ class Menu:
                             scale=(2, 2), rotation=random.randrange(10) * 36 + 15,
                             relativeOffset=(random.uniform(-1, 1), random.uniform(-1, 1)))
         self.menustars.add(particle)
-
-
-menu = Menu()

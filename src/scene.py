@@ -9,6 +9,7 @@ from buttons import Button
 
 from assets import Assets
 from particles import Particle
+from game import Game
 
 
 class Scene:
@@ -16,6 +17,7 @@ class Scene:
     def __init__(self):
         Sm.loadins.append(self.load)
         Sm.states.update({'scene': self.scene,
+                          'scene_instance': self
                           })
 
     def load(self):
@@ -25,7 +27,7 @@ class Scene:
         if Sm.prevstate != "scene":
             self.scenetimer = 0
             self.rockettimer = 0
-            self.laserparticles = pygame.sprite.Group()  # for rocket
+            self.rocketparticles = pygame.sprite.Group()  # for rocket
 
             self.boxes = pygame.sprite.Group()
             self.boxparticles = pygame.sprite.Group()
@@ -68,7 +70,7 @@ class Scene:
 
         self.rockettimer -= self.dt
         self.rocket()
-        self.laserparticles.update()
+        self.rocketparticles.update()
 
         Assets.rocketsprites.draw(0, pos=(28, 208))
 
@@ -77,7 +79,7 @@ class Scene:
             Assets.font_white.write('! ALERT !', scale=(5, 5), pos=self.sizehalf, relativeOffset=(0, 0.2))
 
         if self.scenetimer >= 1.6:
-            Sm.state = "game"
+            Game()
 
     def rocket(self):
         if self.rockettimer <= 0:
@@ -89,7 +91,4 @@ class Scene:
                                     velocity=(-140, 0),
                                     scale=(3, 3), rotation=random.randint(-15, 15),
                                     relativeOffset=(-0.5, 0))
-                self.laserparticles.add(particle)
-
-
-scene = Scene()
+                self.rocketparticles.add(particle)
