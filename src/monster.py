@@ -32,7 +32,7 @@ class Monster():
         self.step = 0
         self.blink = 0
         self.wallrect = pygame.rect.Rect(108, 30, 810, 528)
-        self.rect = self.msr.draw(0, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0))[0]
+        self.rect = self.msr.rects(0, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0))[0]
         #self.collided = pygame.sprite.Group()
         self.bvh = None
         self.hitstaken = 0
@@ -95,10 +95,6 @@ class Monster():
             pos += direction2 * self.speed * dt * 10
             armpos += direction2 * self.speed * dt * 10
             moved = direction2
-
-        '''if self.collided:
-            self.pos.update(pos)
-            self.armpos.update(armpos)'''
 
         rect = self.msr.rects(0, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0))[0]
         for item in self.bvh.collisionrect(rect=rect):
@@ -179,7 +175,9 @@ class Monster():
 
     def body_draw(self):
         # body
-        self.rect = self.msr.draw(0, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0))[0]
+        rects = self.msr.rects(0, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0))
+        self.rect = rects[0]
+        self.msr.draw_only(0, rects)
 
         # eye
         relativeOffset = self.tentacle.endpos - self.pos
@@ -196,7 +194,7 @@ class Monster():
 
         # health bar
         self.msr.draw(4, scale=(self.scale/0.6875, 1.5 * self.scale), pos=self.pos, relativeOffset=(0, 2.5))
-        self.msr.draw(5, scale=(max(self.health/100, 0) * self.scale/0.6875, 1.5 * self.scale), pos=self.pos + (-16 * self.scale/0.6875, 0), relativeOffset=(-0.5, 2.5))
+        self.msr.draw(5, scale=(max(self.health/100, 0) * self.scale/0.6875, 1.5 * self.scale), pos=self.pos + (-16 * self.scale/0.6875, 0), relativeOffset=(-0.5, 2.5), offset=(-0.4, 0))
 
     def legs_draw(self):
         self.leftleg.draw()

@@ -19,6 +19,7 @@ class Game:
     def __init__(self):
         Sm.state = "game"
         Sm.states.update({'game': self.game,
+                          'pause': self.pause,
                           'game_instance': self
                           })
 
@@ -27,6 +28,7 @@ class Game:
 
         self.boxes = self.scene.boxes
         self.boxparticles = self.scene.boxparticles
+        self.laserparticles = self.scene.rocketparticles
         self.timer = 0
         self.clearedtimer = 0
         entity.Astronaut.died = 0
@@ -127,8 +129,6 @@ class Game:
 
         self.boxes.update('shadow')
 
-        # todo
-
         #  monster update
         self.monster.update(self.dt)
         tentacleendpos = self.monster.tentacle.endpos.copy()
@@ -197,8 +197,8 @@ class Game:
 
         Assets.rocketsprites.draw(0, pos=(28, 208))
 
-        self.bvh = BVH(self.bvh_maxdepth, [self.monster, *self.boxes, *self.astros, *self.lasers])  # BVH creation per frame
-        #self.bvh.draw(self.window)                                             # debug, draws full bvh tree (note 1)
+        self.bvh = BVH(self.bvh_maxdepth, [self.monster, *self.boxes, *self.astros, *self.lasers])
+        #self.bvh.draw(Sm.app.display)
         self.collisions = self.bvh.collisiondict()
         #print(self.collisions)
         for key in self.collisions:
@@ -209,8 +209,8 @@ class Game:
         for k, x in enumerate(str(self.wave)):
             wavetext += x+('\n' if k+1 != len(str(self.wave)) else '')
 
-        Assets.font_black.write(wavetext, scale=(2, 2), pos=(1014, 300), relativeOffset=(1, 0.5))
-        Assets.font_black.write("W\nA\nV\nE", scale=(1.4, 1.31), pos=(963, 300), relativeOffset=(0, 0.5))
+        Assets.font_black.write(wavetext, scale=(2, 2), pos=(1014, 300), relativeOffset=(0.5, 0))
+        Assets.font_black.write("W\nA\nV\nE", scale=(1.4, 1.31), pos=(963, 300), relativeOffset=(-0.5, 0))
 
         if self.asteroidparticles:
             self.asteroidparticles.update()
@@ -218,9 +218,9 @@ class Game:
                 asteroid.velocity.y += 350*self.dt
 
         if self.monster.health <= 0:
-            Assets.shade.draw()
+            Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
             Assets.font_white.write(f"Wave cleared:\nKills:\nHits taken:\nBoxes thrown:\nTime:", scale=(2, 2), pos=(300, 195))
-            Assets.font_white.write(f"{self.wave-1}\n{entity.Astronaut.died}\n{self.monster.hitstaken}\n{entity.Box.thrown}\n{timedelta(seconds=round(self.timer))}", scale=(2, 2), pos=(724, 195), relativeOffset=(True, 0))
+            Assets.font_white.write(f"{self.wave-1}\n{entity.Astronaut.died}\n{self.monster.hitstaken}\n{entity.Box.thrown}\n{timedelta(seconds=round(self.timer))}", scale=(2, 2), pos=(724, 195), relativeOffset=(0.7, -0.5), align=-1)
 
             if Sm.app.keys((Sm.app.controls['Ok'], pygame.K_RETURN))[0]:
                 Sm.state = "menu"
@@ -229,8 +229,8 @@ class Game:
 
             if self.clearedtimer > 0:
                 self.clearedtimer -= self.dt
-                Assets.shade.draw()
-                Assets.font_white.write(f"Wave cleared!", scale=(3, 3), pos=(285, 300), relativeOffset=(0, 0.5))
+                Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
+                Assets.font_white.write(f"Wave cleared!", scale=(3, 3), pos=(285, 300), relativeOffset=(-0.5, 0.5))
 
             self.pausebutton.name = 0
             self.pausebutton.update()
@@ -243,6 +243,84 @@ class Game:
             if self.monster.health <= 0:
                 Sm.state = "menu"
             self.monster.health = 0
+
+    def pause(self):
+
+        self.menu.starparticles.update('draw')
+
+        Assets.ship.draw()
+
+        self.floorbloodparticles.update('draw')
+
+        self.boxes.update('shadow')
+
+        self.boxparticles.update('draw')
+
+        monster_y = self.monster.pos.y
+        #  astronaut draw1
+        for astronaut in sorted(self.astros, key=lambda a: a.pos.y):
+            if astronaut.rect.top < monster_y:
+                astronaut.update('draw')
+
+        #  astronaut death draw1
+        for astronaut in sorted(self.astrosdeathanim, key=lambda a: a.pos.y):
+            if astronaut.rect.top < monster_y:
+                astronaut.update('draw')
+
+        #  box draw1
+        for box in sorted(self.boxes, key=lambda a: a.pos.y):
+            if box.pos.y < monster_y:
+                box.update('draw')
+
+        #  monster draw
+        self.monster.legs_draw()
+
+        #  astronaut draw2
+        for astronaut in sorted(self.astros, key=lambda a: a.pos.y):
+            if astronaut.rect.top >= monster_y:
+                astronaut.update('draw')
+
+        #  astronaut death draw2
+        for astronaut in sorted(self.astrosdeathanim, key=lambda a: a.pos.y):
+            if astronaut.rect.top >= monster_y:
+                astronaut.update('draw')
+
+        #  box draw2
+        for box in sorted(self.boxes, key=lambda a: a.pos.y):
+            if box.pos.y >= monster_y:
+                box.update('draw')
+
+        self.drawdoors()
+
+        # body/tentacle draw
+        self.monster.tentacle.draw()
+        self.monster.body_draw()
+
+        #  lasers update/draw
+        self.lasers.update('draw')
+        self.laserparticles.update('draw')
+
+        Assets.rocketsprites.draw(0, pos=(28, 208))
+
+        wavetext = ''
+        for k, x in enumerate(str(self.wave)):
+            wavetext += x + ('\n' if k + 1 != len(str(self.wave)) else '')
+
+        Assets.font_black.write(wavetext, scale=(2, 2), pos=(1014, 300), relativeOffset=(0.5, 0))
+        Assets.font_black.write("W\nA\nV\nE", scale=(1.4, 1.31), pos=(963, 300), relativeOffset=(-0.5, 0))
+
+        if self.clearedtimer > 0:
+            Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
+            Assets.font_white.write("Wave cleared!", scale=(3, 3), pos=(285, 300), relativeOffset=(0, 0.5))
+
+        if self.asteroidparticles:
+            self.asteroidparticles.update('draw')
+
+        self.pausebutton.name = 1
+        self.pausebutton.update()
+
+        if Sm.app.keys((Sm.app.controls['Ok'], Sm.app.controls['Esc'], pygame.K_RETURN))[0] or self.pausebutton.clicked:
+            Sm.state = "game"
 
     @staticmethod
     def drawdoors():

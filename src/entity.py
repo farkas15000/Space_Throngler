@@ -461,6 +461,7 @@ class Astronaut(pygame.sprite.Sprite):
 class Laser(pygame.sprite.Sprite):
     group = None
     particles = None
+    wallrect = pygame.rect.Rect(102, 32, 820, 532)
 
     def __init__(self, pos, damage):
         # wallrect is at sprite load in loadin
@@ -498,15 +499,15 @@ class Laser(pygame.sprite.Sprite):
                                     rotation=self.rotation)
         self.rect = self.rects[2]
 
-        if not self.rects[3]:
-            self.die()
+        if not self.wallrect.colliderect(self.rect):
+            self.die(False)
 
         self.draw()
 
     def draw(self):
         self.msr.draw_only(name=0, rects=self.rects, scale=(self.scale, self.scale), flip=(0, 0))
 
-    def die(self):
+    def die(self, sound=True):
         self.kill()
 
         for z in range(random.randrange(6, 8)):
@@ -514,7 +515,7 @@ class Laser(pygame.sprite.Sprite):
                                 animation=(0.1, 10, 11, 12, 13), velocity=(self.direction*-200).rotate((random.randint(-100, 100))), scale=(2, 2), rotation=random.randrange(10)*36)
             Laser.particles.add(particle)
 
-        if self.rects[3]:
+        if sound:
             random.choice(Assets.laserhitsounds).play()
 
     def collision(self, hits):

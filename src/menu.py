@@ -33,6 +33,8 @@ class Menu:
                                  popup=(1.06, 1.06))
         self.exitbutton.scale = (3, 3)
 
+        self.mobiletoggle = not Sm.app.mobile
+
         self.eastereggknob = Button(sprites=Assets.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(Sm.app.scale, 0.5, 4, 84, 234), 370), relativeOffset=(0, 0), popup=(1.04, 1.04))
 
         self.starparticles = pygame.sprite.Group()
@@ -129,7 +131,7 @@ class Menu:
             self.soundbutton.pos.x = map_value(Sm.app.soundvolume, 0, 1, 531, 681)
 
         self.mobilebutton.update()
-        if self.mobilebutton.clicked:
+        if self.mobilebutton.clicked and self.mobiletoggle:
             Sm.app.mobile = not Sm.app.mobile
             self.mobilebutton.name = Sm.app.mobile
 

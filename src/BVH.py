@@ -1,5 +1,5 @@
 import pygame
-
+from pygame._sdl2 import Renderer
 
 class BVH(pygame.sprite.Sprite):
     # had to rewrite this whole thing cos it was flawed
@@ -114,23 +114,27 @@ class BVH(pygame.sprite.Sprite):
                     if rect.colliderect(item1.rect):
                         hitset.add(item1)
                         #if draw:
-                        #    pygame.draw.rect(draw, (255, 0, 255, 0), item1.rect, width=1)
+                        #    renderer.draw_color = (255, 0, 255, 0)
+                        #    renderer.draw_rect(item1.rect)
             if draw:
                 self.root(draw)
 
         return hitset
 
-    def draw(self, renderer):
+    def draw(self, renderer: Renderer):
         # draws the whole tree
-        pygame.draw.rect(renderer, (0, 0, 255, 0), self.rect, width=1)
+        renderer.draw_color = (0, 0, 255, 0)
+        renderer.draw_rect(self.rect)
         for child in self.child:
             child.draw(renderer)
         for item in self.sprites:
-            pygame.draw.rect(renderer, (255, 0, 0, 0), item.rect, width=1)
+            renderer.draw_color = (255, 0, 0, 0)
+            renderer.draw_rect(item.rect)
 
     def root(self, renderer):
         # draws the root of the tree
-        pygame.draw.rect(renderer, (255, 0, 0, 0), self.rect, width=1)
+        renderer.draw_color = (255, 0, 0, 0)
+        renderer.draw_rect(self.rect)
 
     def info(self):
         # debug everything
@@ -141,7 +145,7 @@ class BVH(pygame.sprite.Sprite):
             children.info()
 
 
-class Collider():
+class Collider:
     # dummy object for BVH
 
     def __init__(self, absrect):

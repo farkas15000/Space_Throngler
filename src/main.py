@@ -120,94 +120,6 @@ class App:
         Sm.state = 'menu'
         Sm.loadin()
 
-    def pause(self):
-        if self.stateprev[0] != self.stateloop:
-            #print('pause')
-            pass
-
-        self.starparticles.update('draw')
-
-        self.ship.draw()
-
-        self.floorbloodparticles.update('draw')
-
-        self.boxes.update('shadow')
-
-        self.boxparticles.update('draw')
-
-        monster_y = self.monster.pos.y
-        #  astronaut draw1
-        for astronaut in sorted(self.astros, key=lambda a: a.pos.y):
-            if astronaut.rect.top < monster_y:
-                astronaut.update('draw')
-
-        #  astronaut death draw1
-        for astronaut in sorted(self.astrosdeathanim, key=lambda a: a.pos.y):
-            if astronaut.rect.top < monster_y:
-                astronaut.update('draw')
-
-        #  box draw1
-        for box in sorted(self.boxes, key=lambda a: a.pos.y):
-            if box.pos.y < monster_y:
-                box.update('draw')
-
-        #  monster draw
-        self.monster.legs_draw()
-
-        #  astronaut draw2
-        for astronaut in sorted(self.astros, key=lambda a: a.pos.y):
-            if astronaut.rect.top >= monster_y:
-                astronaut.update('draw')
-
-        #  astronaut death draw2
-        for astronaut in sorted(self.astrosdeathanim, key=lambda a: a.pos.y):
-            if astronaut.rect.top >= monster_y:
-                astronaut.update('draw')
-
-        #  box draw2
-        for box in sorted(self.boxes, key=lambda a: a.pos.y):
-            if box.pos.y >= monster_y:
-                box.update('draw')
-
-        self.drawdoors()
-
-        # body/tentacle draw
-        self.monster.tentacle.draw()
-        self.monster.body_draw()
-
-        #  lasers update/draw
-        self.lasers.update('draw')
-        self.laserparticles.update('draw')
-
-        self.rocketsprites.draw(0, pos=(28, 208))
-
-        wavetext = ''
-        for k, x in enumerate(str(self.wave)):
-            wavetext += x + ('\n' if k + 1 != len(str(self.wave)) else '')
-
-        self.font_black.write(wavetext, scale=(2, 2), pos=(1014, 300), offset=(1, 0.5))
-        self.font_black.write("W\nA\nV\nE", scale=(1.4, 1.31), pos=(963, 300), offset=(0, 0.5))
-
-        if self.clearedtimer > 0:
-            self.shade.draw()
-            self.font_white.write("Wave cleared!", scale=(3, 3), pos=(285, 300), offset=(0, 0.5))
-
-        if self.asteroidparticles:
-            self.asteroidparticles.update('draw')
-
-        self.pausebutton.name = 1
-        self.pausebutton.update()
-
-        if self.keys((self.controls['Ok'], self.controls['Esc'], pygame.K_RETURN))[0] or self.pausebutton.clicked:
-            self.stateloop = self.states['game']
-
-    def loadin(self):
-        # Todo
-
-        self.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
-
-        self.lasersprites.windowrect = pygame.rect.Rect(102, 32, 820, 532)
-
     def events(self) -> float:
         # check for events
         fps_start = time.perf_counter()
@@ -342,7 +254,7 @@ class App:
 
             self.display.target = None
             Msr.screenrect = self.display.get_viewport()
-            self.display.draw_color = (10, 10, 10, 0)
+            self.display.draw_color = (15, 15, 15, 0)
             self.display.clear()
 
             self.screen.draw(dstrect=self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size)))
