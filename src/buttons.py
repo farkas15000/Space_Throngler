@@ -3,14 +3,15 @@ from multi_sprite_renderer_hardware import MultiSprite as Msr
 
 
 class Button(pygame.sprite.Sprite):
-    winscale = None
     mousepos = None
     mouse = None
+    keyword = None
 
     @classmethod
-    def input(cls, winscale, mousepos, mouse):
+    def input(cls, mousepos, mouse, keyboard):
         Button.mousepos = mousepos
         Button.mouse = mouse
+        Button.keyboard = keyboard
 
     def __init__(self, sprites: Msr, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(0, 0), popup=(1, 1), sound=None):
         super().__init__()
@@ -124,4 +125,3 @@ class Button(pygame.sprite.Sprite):
         if rects:
             self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, relativeOffset=self.relativeOffset)
         self.sprites.draw_only(name=self.name, rects=self.rects, scale=(self.xm, self.ym))
-

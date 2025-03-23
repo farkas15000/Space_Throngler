@@ -1,9 +1,8 @@
 import pygame
 from pygame._sdl2.video import Renderer
 
+
 class BVH(pygame.sprite.Sprite):
-    # had to rewrite this whole thing cos it was flawed
-    # I was loosing my mind. If the stars aligned you could go through boxes
 
     def __init__(self, max_depth, sprites=(), rect=None, depth=1):
         # max_depth = max recursion level
@@ -153,5 +152,3 @@ class Collider:
 
     def collision(self, hits):
         pass
-
-

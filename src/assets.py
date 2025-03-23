@@ -85,7 +85,6 @@ class Assets:
         ship = pygame.transform.scale_by(ship, 2)
         cls.ship = Msr(images=(ship,))
 
-        # todo
         shade = pygame.Surface((1, 1))
         cls.shade = Msr(images=(shade,))
 

@@ -13,13 +13,13 @@ def dotsrot(start: pygame.math.Vector2, end: pygame.math.Vector2):
     # returns the angle from one point to another
     return pygame.Vector2.angle_to(end-start, (1, 0)) % 360
 
+
 def map_value(value, valuemin, valuemax, mapmin, mapmax):
     return ((value - valuemin) / (valuemax - valuemin)) * (mapmax - mapmin) + mapmin
     # for some reason pygbag doesnt have pygame.math.remap()
 
 
 class Box(Button, pygame.sprite.Sprite):
-    # boxes are secretly buttons
 
     tentaclepos = None
     tentaclemouse = None
@@ -58,7 +58,7 @@ class Box(Button, pygame.sprite.Sprite):
         self.firstlanded = False
         self.windtimer = 0
         self.wallrect = pygame.rect.Rect(98, 16, 828, 550)
-        self.destruct = 14+random.random()*2  # coolest variable name ever
+        self.destruct = 14+random.random()*2
 
     def update(self, mode=None):
         match mode:
@@ -70,7 +70,6 @@ class Box(Button, pygame.sprite.Sprite):
                 self.run()
 
     def run(self):
-        # land of chaos and fake physics
 
         self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, relativeOffset=self.relativeOffset)
         self.rect = self.rects[0]
@@ -98,9 +97,6 @@ class Box(Button, pygame.sprite.Sprite):
         self.destruct -= dt*(self.thrown+1)
         self.windtimer -= dt
 
-        # auto drop box if out of reach
-        #mouse[1] = (mouse[1][0] and not Box.reached, mouse[1][1], mouse[1][2])
-
         # update the button parts
         sticked = self.sticked
         unstick = Box.holding and Box.holding is not self
@@ -127,10 +123,6 @@ class Box(Button, pygame.sprite.Sprite):
                     self.vectors.append((self.pos.copy(), self.timer))
                 if len(self.vectors) > 5:
                     self.vectors.pop(0)
-
-                # throw momentum debug
-                #for vec, _ in self.vectors:
-                #    pygame.draw.rect(self.sprites.renderer, (255, 0, 0, 0), (*vec, 4, 4), width=0)
 
             # box throw
             if (not self.sticked and sticked) and Box.holding is self:
@@ -161,9 +153,6 @@ class Box(Button, pygame.sprite.Sprite):
             self.falling = self.pos != self.target
 
             self.destruct = 15
-
-            #  target debug
-            #pygame.draw.rect(self.sprites.renderer, (255, 0, 0, 0), (*self.target, 4, 4), width=0)
 
             if not self.falling:  # target reached
                 self.firstlanded = True
@@ -242,6 +231,7 @@ class Box(Button, pygame.sprite.Sprite):
             self.sprites.draw(name=5, scale=(self.xm, self.ym), pos=self.target, relativeOffset=(0, 0),
                               alpha=((self.pos.y - self.target.y) / (self.target.y + 30) + 1))
 
+
 class Astronaut(pygame.sprite.Sprite):
     monster = None
     deathanim = None
@@ -258,13 +248,12 @@ class Astronaut(pygame.sprite.Sprite):
         self.target = pygame.Vector2(self.pos + pygame.Vector2((1 if (flipx := self.pos.x < self.monster.pos.x) else -1)*70, random.randrange(-30, 30)))
         self.distance = self.pos.distance_to(self.target)
         self.chainstart = self.target.copy()
-        self.chain = Chain(self.chainstart, 10, 180, 5)  # super complicated movement tech
+        self.chain = Chain(self.chainstart, 10, 180, 5)
         self.speed = 5
         self.health = health
         self.damage = damage
         self.frame = 0
-        self.animation = {'walk': [self.speed/4, 2, 3, 4, 5],
-                          #'stand': [self.speed/2, 0, 1]  # not used
+        self.animation = {'walk': [self.speed/4, 2, 3, 4, 5]
                           }
         self.animtimer = random.random()
         self.flipx = not flipx
@@ -336,7 +325,7 @@ class Astronaut(pygame.sprite.Sprite):
     def shoot(self):
         if self.shoottimer <= 0:
             Laser(self.pos + (-12 if self.flipx else 12, -2), damage=self.damage)
-            self.shoottimer = random.random()+1  # recharge
+            self.shoottimer = random.random()+1
 
             for z in range(8):
                 particle = Particle(pos=self.pos + (-8 if self.flipx else 8, -2), sprites=Assets.particlesprites,

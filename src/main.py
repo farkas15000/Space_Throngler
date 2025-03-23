@@ -1,16 +1,9 @@
-"""
-To enable debug mode go to line 712 and 716.
-"""
-
 import asyncio
 import platform
-from datetime import timedelta
 import pygame
 import sys
 import time
-import random
 import os
-import copy
 from pygame._sdl2.video import Window, Renderer, Texture
 if sys.platform == "emscripten":
     platform.window.canvas.style.imageRendering = "pixelated"
@@ -20,50 +13,11 @@ from buttons import Button
 from multi_sprite_renderer_hardware import MultiSprite as Msr
 from assets import Assets
 from particles import Particle
-from monster import Monster
-import entity
-from BVH import BVH
 
 import menu
 import scene
-menu.Menu()
-scene.Scene()
 
 print('_SDL2 rendering')
-
-
-def map_value(value, valuemin, valuemax, mapmin, mapmax):
-    return ((value - valuemin) / (valuemax - valuemin)) * (mapmax - mapmin) + mapmin
-
-
-def sprite_slicer(width, height, wpad=0, hpad=0, outputlist=None, folders=(), name='', sprite=None):
-    # cuts up image from file or Surface with optional padding and output list
-
-    if width <= 0 or height <= 0:
-        raise Exception('need area!')
-
-    if sprite is None:
-        img = pygame.image.load(os.path.join(*folders, name + '.png')).convert_alpha()
-    else:
-        img = sprite
-    imgh = img.get_height()
-    col = 0
-    if outputlist is None:
-        outputlist = []
-
-    while imgh // height > 0:
-        imgw = img.get_width()
-        row = 0
-        while imgw//width > 0:
-            imgw -= width+wpad
-            sprite = img.subsurface(pygame.Rect(row * (width+wpad), col * (height+hpad), width, height))
-            outputlist.append(sprite)
-            row += 1
-
-        imgh -= height + hpad
-        col += 1
-
-    return outputlist
 
 
 class App:
@@ -75,6 +29,7 @@ class App:
         self.soundvolume = 0.1
 
         self.damagemult = 1
+        self.scale = 1
 
         self.controls = {'Up': pygame.K_w,
                          'Down': pygame.K_s,
@@ -83,11 +38,6 @@ class App:
                          'Ok': pygame.K_SPACE,
                          'Esc': pygame.K_ESCAPE,
                          }
-
-        abspath = os.path.dirname(os.path.abspath(__file__))
-        self.spritespath = os.path.join(abspath, 'assets', 'sprites')
-        self.audiopath = os.path.join(abspath, 'assets', 'audio')
-        self.fontpath = os.path.join(abspath, 'assets', 'fonts')
 
         if hasattr(platform, 'window'):
             self.mobile = platform.window.mobile_check() or platform.window.mobile_tablet()
@@ -108,7 +58,6 @@ class App:
         Msr.setScreen(self.display)
 
         self.dt = 0.016
-        self.scale = 1
         self.running = True
 
         Button.controls = self.controls
@@ -116,12 +65,14 @@ class App:
         Assets.makemsrs()
         Assets.makeaudio()
 
+        menu.Menu()
+        scene.Scene()
+
         Sm.app = self
         Sm.state = 'menu'
         Sm.loadin()
 
     def events(self) -> float:
-        # check for events
         fps_start = time.perf_counter()
 
         for event in pygame.event.get():
@@ -150,9 +101,7 @@ class App:
         self.mousepos[1].x = round(self.mousepos[1].x)
         self.mousepos[1].y = round(self.mousepos[1].y)
 
-        Button.mouse = self.mouse
-        Button.mousepos = self.mousepos
-        Button.keyboard = self.keyboard
+        Button.input(self.mousepos, self.mouse, self.keyboard)
 
         self.mouseclicked = 0
         if self.mouse[1][0] and not self.mouse[0][0]:
@@ -163,7 +112,6 @@ class App:
         return fps_end - fps_start
 
     def keys(self, keys):
-        # keyboard controls check
         pressed = 0
         held = 0
         released = 0
@@ -202,7 +150,7 @@ class App:
             self.window.position = rect.centerx - self.window.size[0] / 2, rect.centery - self.window.size[1] / 2
 
         rect = self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size))
-        pygame.mouse.set_pos(self.mousepos[1].x / 640 * rect.w + rect.x, self.mousepos[1].y / 360 * rect.h + rect.y)
+        pygame.mouse.set_pos(self.mousepos[1].x / self.logical_sizeRect.w * rect.w + rect.x, self.mousepos[1].y / self.logical_sizeRect.h * rect.h + rect.y)
 
     def quit(self):
         # print("Quiting game")
@@ -242,7 +190,7 @@ class App:
 
             # debug
             if self.keys((pygame.K_f,))[0]:
-                self.resize((1024, 600) if self.fullscreen else None)
+                self.resize()
 
             self.display.draw_color = (0, 0, 0, 0)
             self.display.target = self.screen
