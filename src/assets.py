@@ -113,7 +113,8 @@ class Assets:
         boxoutline = pygame.image.load(os.path.join(spritespath, 'boxoutline' + '.png'))
         boxoutline.set_colorkey(colorkey)
         linkedsprites.append(boxoutline)
-        sprite_slicer(22, 22, outputlist=linkedsprites, folders=(spritespath,), name='box_shadow_sprites')
+        boxshadow = pygame.Surface((22, 22))
+        linkedsprites.append(boxshadow)
         cls.boxsprites = Msr(images=linkedsprites)
 
         linkedsprites.clear()

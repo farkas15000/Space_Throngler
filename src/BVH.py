@@ -1,5 +1,5 @@
 import pygame
-from pygame._sdl2 import Renderer
+from pygame._sdl2.video import Renderer
 
 class BVH(pygame.sprite.Sprite):
     # had to rewrite this whole thing cos it was flawed

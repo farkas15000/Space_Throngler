@@ -104,7 +104,7 @@ class Box(Button, pygame.sprite.Sprite):
         # update the button parts
         sticked = self.sticked
         unstick = Box.holding and Box.holding is not self
-        self.loop(draw=False, mousepos=mousepos, mouse=mouse, unstick=drop or unstick)
+        self.loop(draw=False, mousepos=mousepos, mouse=mouse, unstick=drop or unstick or self.falling)
         self.rect = self.rects[0]
 
         # grab box
@@ -239,8 +239,8 @@ class Box(Button, pygame.sprite.Sprite):
 
     def drawshadow(self):
         if not self.firstlanded:
-            self.sprites.draw(name=5 + round(((self.pos.y - self.target.y) / (self.target.y + 30) + 1) * 9),
-                              scale=(self.xm, self.ym), pos=self.target, relativeOffset=(0, 0))
+            self.sprites.draw(name=5, scale=(self.xm, self.ym), pos=self.target, relativeOffset=(0, 0),
+                              alpha=((self.pos.y - self.target.y) / (self.target.y + 30) + 1))
 
 class Astronaut(pygame.sprite.Sprite):
     monster = None

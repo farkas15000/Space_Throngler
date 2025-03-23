@@ -208,6 +208,7 @@ class App:
         # print("Quiting game")
 
         self.running = False
+        pygame.mixer.music.stop()
 
         self.display.draw_color = "Black"
         self.display.clear()
