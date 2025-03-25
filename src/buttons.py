@@ -125,3 +125,40 @@ class Button(pygame.sprite.Sprite):
         if rects:
             self.rects = self.sprites.rects(name=self.name, scale=(self.xm, self.ym), pos=self.pos, relativeOffset=self.relativeOffset)
         self.sprites.draw_only(name=self.name, rects=self.rects, scale=(self.xm, self.ym))
+
+
+class Slider(Button):
+    @staticmethod
+    def map_value(value, valuemin, valuemax, mapmin, mapmax):
+        return ((value - valuemin) / (valuemax - valuemin)) * (mapmax - mapmin) + mapmin
+
+    def __init__(self, sprites, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(0, 0), popup=(1, 1), sound=None, horizontal=True, posmap=(100, 300), valuemap=(0, 100), stepsize=1):
+        super().__init__(sprites, name=name, scale=scale, pos=pygame.Vector2(pos), relativeOffset=relativeOffset, popup=popup, sound=sound)
+        self.posmap = posmap
+        self.valuemap = valuemap
+        self.stepsize = stepsize
+        self.horizontal = horizontal
+        self.value = valuemap[0]
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        mod = value % self.stepsize
+        value = int(pygame.math.clamp(value - mod + (self.stepsize if mod*2 >= self.stepsize else 0), self.valuemap[0], self.valuemap[1]))
+
+        self._value = value
+        self.pos[not self.horizontal] = ((value - self.valuemap[0]) / (self.valuemap[1] - self.valuemap[0])) * (self.posmap[1] - self.posmap[0]) + self.posmap[0]
+
+    def loop(self, draw=True, sound=True, mousepos=None, mouse=None, ungrab=False, unstick=False):
+        rects = super().loop(draw, sound, mousepos, mouse, ungrab, unstick)
+
+        if mousepos is None:
+            mousepos = Button.mousepos
+
+        if self.grabbed and not self.clicked:
+            self.value = ((mousepos[1][not self.horizontal] - self.posmap[0]) / (self.posmap[1] - self.posmap[0])) * (self.valuemap[1] - self.valuemap[0]) + self.valuemap[0]
+
+        return rects

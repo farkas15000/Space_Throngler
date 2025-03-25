@@ -296,7 +296,6 @@ class Astronaut(pygame.sprite.Sprite):
             self.targeting()
 
     def targeting(self):
-        # IDK just turn on the debug if you wanna see it in work
 
         stepsize = 10
         for z in range(3):
@@ -351,17 +350,7 @@ class Astronaut(pygame.sprite.Sprite):
         for blood in self.bleeds:
             Assets.bloodsprites.draw(name=blood[0], scale=(self.scale, self.scale), pos=self.pos+blood[1], rotation=blood[2], flip=blood[3])
 
-        # debug
-        #self.chain.draw()
-
-        #cord = pygame.rect.Rect(0, 0, 6, 6)
-        #cord.center = self.chainstart
-        #pygame.draw.rect(self.msr.renderer, (255, 0, 255, 0), cord, width=1)
-
-        #pygame.draw.rect(self.msr.renderer, (255, 0, 255, 0), self.wallrect, width=1)
-
     def animator(self, animation):
-        # decides the sprite to use
 
         length = len(self.animation[animation]) - 1
         full = self.animation[animation][0]
@@ -374,7 +363,6 @@ class Astronaut(pygame.sprite.Sprite):
         return False
 
     def collision(self, hits):
-        # madness
 
         if hits:
             if Box.holding and Box.holding in self.collided:
@@ -441,7 +429,6 @@ class Astronaut(pygame.sprite.Sprite):
                     self.target += vec.normalize() * Box.dt * 80
                     self.chainstart += vec.normalize() * Box.dt * 80
 
-
             collided.intersection_update(hits)
             self.collided.empty()
             self.collided.add(collided)
@@ -453,7 +440,6 @@ class Laser(pygame.sprite.Sprite):
     wallrect = pygame.rect.Rect(102, 32, 820, 532)
 
     def __init__(self, pos, damage):
-        # wallrect is at sprite load in loadin
         super().__init__()
         Laser.group.add(self)
         self.scale = 2
@@ -554,19 +540,3 @@ class Chain():
             diff = self.links[-1][0] - start
             for k, (link, _) in enumerate(self.links):
                 link -= diff
-
-        #self.draw()
-
-    """
-    def draw(self):
-        # just debug, no sprites
-
-        cord = pygame.rect.Rect(0, 0, 4, 4)
-        for k, (link, rot) in enumerate(self.links):
-            cord.center = link
-            pygame.draw.rect(self.renderer, (250, 0, 0, 0), cord, width=0)
-        cord.center = self.endpos
-        pygame.draw.rect(self.renderer, (0, 255, 0, 0), cord, width=0)
-        cord.center = self.startpos
-        pygame.draw.rect(self.renderer, (0, 0, 255, 0), cord, width=0)
-    """

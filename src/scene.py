@@ -5,8 +5,6 @@ import pygame
 
 import entity
 from engine import StateMachine as Sm
-from buttons import Button
-
 from assets import Assets
 from particles import Particle
 from game import Game
@@ -27,7 +25,7 @@ class Scene:
         if Sm.prevstate != "scene":
             self.scenetimer = 0
             self.rockettimer = 0
-            self.rocketparticles = pygame.sprite.Group()  # for rocket
+            self.rocketparticles = pygame.sprite.Group()
 
             self.boxes = pygame.sprite.Group()
             self.boxparticles = pygame.sprite.Group()

@@ -3,7 +3,6 @@ import platform
 import pygame
 import sys
 import time
-import os
 from pygame._sdl2.video import Window, Renderer, Texture
 if sys.platform == "emscripten":
     platform.window.canvas.style.imageRendering = "pixelated"
@@ -16,8 +15,6 @@ from particles import Particle
 
 import menu
 import scene
-
-print('_SDL2 rendering')
 
 
 class App:
@@ -37,6 +34,7 @@ class App:
                          'Right': pygame.K_d,
                          'Ok': pygame.K_SPACE,
                          'Esc': pygame.K_ESCAPE,
+                         'Fullscreen': pygame.K_f
                          }
 
         if hasattr(platform, 'window'):
@@ -153,7 +151,6 @@ class App:
         pygame.mouse.set_pos(self.mousepos[1].x / self.logical_sizeRect.w * rect.w + rect.x, self.mousepos[1].y / self.logical_sizeRect.h * rect.h + rect.y)
 
     def quit(self):
-        # print("Quiting game")
 
         self.running = False
         pygame.mixer.music.stop()
@@ -166,7 +163,6 @@ class App:
             self.display.target = None
 
     async def run(self):
-        # start up
         self.mousepos = (pygame.Vector2(0, 0), pygame.Vector2(0, 0))
         self.keyboard = (pygame.key.get_pressed(), pygame.key.get_pressed())
         self.mouse = (pygame.mouse.get_pressed(), pygame.mouse.get_pressed())
@@ -189,7 +185,7 @@ class App:
             eventtime = self.events()
 
             # debug
-            if self.keys((pygame.K_f,))[0]:
+            if self.keys((self.controls["Fullscreen"],))[0]:
                 self.resize()
 
             self.display.draw_color = (0, 0, 0, 0)
@@ -225,7 +221,6 @@ class App:
             self.clock.tick(60)
             fps_end2 = time.perf_counter()
             self.dt = min(fps_end2 - fps_start - eventtime, 0.1)
-            # print(self.clock.get_fps())
 
 
 if __name__ == '__main__':

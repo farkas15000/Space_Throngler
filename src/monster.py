@@ -14,12 +14,12 @@ def dotsrot(start: pygame.math.Vector2, end: pygame.math.Vector2):
     # returns the angle from one point to another
     return pygame.Vector2.angle_to(end-start, (1, 0)) % 360
 
-# 0.6875 scale base
-class Monster():
+
+class Monster:
 
     def __init__(self, sprites: msr, scale):
         self.game = Sm.states["game_instance"]
-        self.scale = 0.6875 * scale *1.15
+        self.scale = 0.6875 * scale * 1.15
         self.msr = sprites
         self.pos = pygame.Vector2(Sm.app.logical_sizeRect.size) / 2
         self.health = 100
@@ -33,7 +33,6 @@ class Monster():
         self.blink = 0
         self.wallrect = pygame.rect.Rect(108, 30, 810, 528)
         self.rect = self.msr.rects(0, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0))[0]
-        #self.collided = pygame.sprite.Group()
         self.bvh = None
         self.hitstaken = 0
 
@@ -74,7 +73,7 @@ class Monster():
             mouseposvect = pygame.Vector2(self.pos)
             move.update(0, 0)
 
-        # movement. IT WORKS, OK?!
+        # movement.
         moved = move.copy()
         direction = move.copy()
         direction.x = 0
@@ -158,20 +157,11 @@ class Monster():
         # tentacle
         self.tentacle.update(dt, self.armpos, self.pos)
 
-        # arm debug
-        #pygame.draw.rect(self.msr.renderer, (0, 255, 0, 0), (*self.armpos, 8, 8), width=0)
-        #pygame.draw.rect(self.msr.renderer, (255, 0, 0, 0), (*self.tentacle.endpos, 8, 8), width=0)
-
         # legs
         self.leftleg.update(dt, moved, self.rightleg.grounded)
         self.rightleg.update(dt, moved, self.leftleg.grounded)
 
         self.blink -= dt
-
-        # wall rect debug
-        #pygame.draw.rect(self.msr.renderer, (255, 0, 0, 0), self.wallrect, width=1)
-
-        #self.collided.empty()
 
     def body_draw(self):
         # body
@@ -209,10 +199,8 @@ class Monster():
                     self.health -= item.damage
                     item.die()
 
-                #if isinstance(item, Box) and not item.falling and Box.holding is not item:
-                #    self.collided.add(item)
 
-class Limb():
+class Limb:
 
     def __init__(self, sprites, bodypos, bodyspeed, left=-1, scale=1.0):
         self.left = left
@@ -236,15 +224,6 @@ class Limb():
 
         limb = self.limb(start, self.end, self.upper, self.lower, self.minlen, flip=self.left < 0)
 
-        # upper limb draw
-        #self.msr.draw(name=2, scale=[self.upper / 16, 0.9 * self.scale], pos=limb[0], relativeOffset=(-0.5, 0), rotation=limb[1])
-        #self.msr.draw(name=2, scale=[self.lower / 16, 0.8 * self.scale], pos=limb[2], relativeOffset=(-0.5, 0), rotation=limb[3])
-
-        # lower limb draw
-        #self.msr.draw(name=3, scale=[1 * self.scale, 1 * self.scale], pos=start, relativeOffset=(0, 0), rotation=limb[1])
-        #self.msr.draw(name=3, scale=[0.9 * self.scale, 0.9 * self.scale], pos=limb[2], relativeOffset=(0, 0), rotation=limb[3])
-        #self.msr.draw(name=3, scale=[1.2 * self.scale, 0.9 * self.scale], pos=limb[4], relativeOffset=(0.05, 0), rotation=0)
-
         limbpos = self.bodypos+((self.upper*1.2+15 * self.scale)*self.left, self.lower*0.6)
         limbdist = (limbpos - limb[4]).length()
 
@@ -252,12 +231,6 @@ class Limb():
         if (limbdist > self.maxdist or (self.end-self.bodypos).length() > self.maxdist*4 or (self.end.y-self.bodypos.y) < self.maxdist*0.4) and step:
             self.next = limbpos + (move.x*self.bodyspeed*2, move.y*self.bodyspeed*2)
             self.prev.update(self.end)
-
-        # leg debug
-        #pygame.draw.rect(self.msr.renderer, (250, 0, 0, 0), (*limbpos, 4, 4), width=1)
-        #pygame.draw.rect(self.msr.renderer, (250, 0, 0, 0), (*self.next, 4, 4), width=0)
-        #pygame.draw.rect(self.msr.renderer, (0, 250, 0, 0), (*self.end, 4, 4), width=1)
-        #pygame.draw.rect(self.msr.renderer, (0, 0, 255, 0), (*self.prev, 4, 4), width=1)
 
         self.end.move_towards_ip(self.next, self.speed * dt * 10)
 
@@ -310,7 +283,7 @@ class Limb():
         return start, lrot + aim, lowercord, lrot - urot + aim, uppercord, distance
 
 
-class Tentacle():
+class Tentacle:
     # modified Chain class
 
     def __init__(self, sprite, end, length, rot, links, start=None, scale=1.0):
@@ -361,11 +334,5 @@ class Tentacle():
         self.timer += dt
 
     def draw(self):
-        #cord = pygame.rect.Rect(0, 0, 4, 4)
         for k, (link, rot) in enumerate(self.links):
             self.msr.draw(name=3, scale=[1.4 * self.scale, (0.9+(k*0.05)) * self.scale], pos=link, relativeOffset=(0.5, 0), rotation=rot, flip=[0, 0])
-
-            #debug
-            #cord.center = link
-            #pygame.draw.rect(self.msr.renderer, (250, 0, 0, 0), cord, width=0)
-

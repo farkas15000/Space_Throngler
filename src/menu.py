@@ -1,14 +1,10 @@
 import random
 import pygame
 from engine import StateMachine as Sm
-from buttons import Button
+from buttons import Button, Slider
 
 from assets import Assets
 from particles import Particle
-
-
-def map_value(value, valuemin, valuemax, mapmin, mapmax):
-    return ((value - valuemin) / (valuemax - valuemin)) * (mapmax - mapmin) + mapmin
 
 
 class Menu:
@@ -27,7 +23,8 @@ class Menu:
         self.easteregg = 0
 
         self.startbutton = Button(sprites=Assets.startsprites, name=0, scale=(2, 2), pos=(512, 270),  relativeOffset=(0, 0), popup=(1.04, 1.04))
-        self.soundbutton = Button(sprites=Assets.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(Sm.app.soundvolume, 0, 1, 531, 681), 370), relativeOffset=(0, 0), popup=(1.04, 1.04))
+        self.soundslider = Slider(sprites=Assets.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(0, 370), relativeOffset=(0, 0), popup=(1.04, 1.04), posmap=(531, 681), valuemap=(0, 100), stepsize=5)
+        self.soundslider.value = Sm.app.soundvolume * 100
         self.mobilebutton = Button(sprites=Assets.mobilesprites, name=Sm.app.mobile, scale=(2, 2), pos=(1014, 12), relativeOffset=(0.5, -0.5), popup=(1, 1))
         self.exitbutton = Button(sprites=Assets.buttonsprites, name=0, scale=(2, 2), relativeOffset=(-0.5, -0.5),
                                  popup=(1.06, 1.06))
@@ -35,7 +32,8 @@ class Menu:
 
         self.mobiletoggle = not Sm.app.mobile
 
-        self.eastereggknob = Button(sprites=Assets.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(map_value(Sm.app.scale, 0.5, 4, 84, 234), 370), relativeOffset=(0, 0), popup=(1.04, 1.04))
+        self.eastereggknob = Slider(sprites=Assets.soundsprites, name=1, scale=(3, 3), pos=pygame.Vector2(0, 370), relativeOffset=(0, 0), popup=(1.04, 1.04), posmap=(84, 234), valuemap=(50, 400), stepsize=1)
+        self.eastereggknob.value = Sm.app.scale * 100
 
         self.starparticles = pygame.sprite.Group()
         self.menustars = pygame.sprite.Group()
@@ -47,7 +45,6 @@ class Menu:
 
     def menu(self):
         if Sm.prevstate != "menu":
-            #print('menu')
             self.startimer = 0
             self.menustartimer = 0
             self.trailtimer = 0
@@ -79,8 +76,7 @@ class Menu:
                 self.menustars.add(trail)
 
         self.asteroidrot -= 45 * self.dt
-        asteroid = Assets.asteroidsprites.draw(0, scale=(3, 3), pos=(880, 305), relativeOffset=(0, 0), rotation=self.asteroidrot)[
-            0]
+        asteroid = Assets.asteroidsprites.draw(0, scale=(3, 3), pos=(880, 305), relativeOffset=(0, 0), rotation=self.asteroidrot)[0]
         if Sm.app.mouseclicked and self.easteregg < 10 and asteroid.collidepoint(Button.mousepos[1]):
             self.easteregg += 1
             Assets.clearedsound.play()
@@ -88,12 +84,11 @@ class Menu:
         if self.easteregg >= 10:
             Assets.eastereggsprite.draw(0, scale=(2, 2), pos=(120, 235))
             Assets.soundsprites.draw(2, scale=(1, 1), pos=(60, 370), relativeOffset=(-0.5, 0))
+
+            scale = self.eastereggknob.value
             self.eastereggknob.update()
-            if self.eastereggknob.grabbed:
-                posx = self.eastereggknob.pos.x
-                self.eastereggknob.pos.x = pygame.math.clamp(Button.mousepos[1][0], 84, 234)
-                if posx != self.eastereggknob.pos.x:
-                    Sm.app.scale = round(map_value(self.eastereggknob.pos.x, 84, 234, 0.5, 4), 1)
+            if scale != self.eastereggknob.value:
+                Sm.app.scale = round(self.eastereggknob.value / 100, 1)
             Assets.font_white.write(f'Size:{round(Sm.app.scale, 1)}x', scale=(2, 2), pos=(52, 400))
 
         Assets.menu_texts_msr.draw(0, scale=(3, 3), pos=(512, 150), relativeOffset=(0, 0))
@@ -112,23 +107,15 @@ class Menu:
         Assets.soundsprites.draw(0, scale=(2, 2), pos=(475, 370), relativeOffset=(0.5, 0))
         Assets.soundsprites.draw(2, scale=(1, 1), pos=(507, 370), relativeOffset=(-0.5, 0))
 
-        self.soundbutton.update()
-        if self.soundbutton.grabbed:
-            posx = self.soundbutton.pos.x
-            self.soundbutton.pos.x = pygame.math.clamp(Button.mousepos[1][0], 531, 681)
-            if posx != self.soundbutton.pos.x:
-                Sm.app.soundvolume = map_value(self.soundbutton.pos.x, 531, 681, 0, 1)
-                self.audio()
+        volume = self.soundslider.value
+        self.soundslider.update()
         if Sm.app.keys((Sm.app.controls['Left'], pygame.K_LEFT, Sm.app.controls['Down'], pygame.K_DOWN))[0]:
-            Sm.app.soundvolume -= 0.05
-            Sm.app.soundvolume = max(Sm.app.soundvolume, 0)
-            self.audio()
-            self.soundbutton.pos.x = map_value(Sm.app.soundvolume, 0, 1, 531, 681)
+            self.soundslider.value -= self.soundslider.stepsize
         if Sm.app.keys((Sm.app.controls['Right'], pygame.K_RIGHT, Sm.app.controls['Up'], pygame.K_UP))[0]:
-            Sm.app.soundvolume += 0.05
-            Sm.app.soundvolume = min(Sm.app.soundvolume, 1)
+            self.soundslider.value += self.soundslider.stepsize
+        if volume != self.soundslider.value:
+            Sm.app.soundvolume = self.soundslider.value / 100
             self.audio()
-            self.soundbutton.pos.x = map_value(Sm.app.soundvolume, 0, 1, 531, 681)
 
         self.mobilebutton.update()
         if self.mobilebutton.clicked and self.mobiletoggle:
@@ -181,8 +168,6 @@ class Menu:
                                         scale=(2, 2), rotation=random.randrange(10) * 36+15,
                                         relativeOffset=(random.uniform(-1, 1), random.uniform(-1, 1)))
                     self.starparticles.add(particle)
-
-            #print(len(self.starparticles))
 
     def menustarsadd(self, preload=False):
 

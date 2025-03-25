@@ -51,10 +51,6 @@ class MultiSprite:
         self.__init__(folders=folders, names=names, images=images, font=font, size=size, bold=bold, italic=italic, color=color, background=background, AA=AA)
 
     def __init__(self, folders=(), names=(), images=(), font=None, size=50, bold=False, italic=False, color='White', background=None, AA=False):
-        # renderer Surface
-        # file names come before images in indexing
-        # don't mix names and images with font
-        # alpha pre-set, can be modified to be cached
 
         self.sprites = {}
 
@@ -95,9 +91,6 @@ class MultiSprite:
                 self.sprites[char] = (texture, rect)
 
     def draw(self, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, flip=(0, 0), alpha=1):
-        # name = sprite index in order, scale relative, pos = origin point
-        # offset relative shift from pos works with rotation, (-0.5, -0.5)=topleft, (0, 0)=center
-        # returns: rect of drawn sprite with rotation, fully encapsulating rect, if it was drawn
 
         rect = MultiSprite.rect
         rect.size = self.sprites[name][1].size
@@ -116,23 +109,11 @@ class MultiSprite:
             self.sprites[name][0].alpha = 255*alpha
             self.sprites[name][0].draw(dstrect=rect, angle=-rotation, origin=None, flip_x=flip[0], flip_y=flip[1])
 
-        '''self.screen.draw_color = (0, 0, 255, 0)
-        self.screen.draw_rect(absrect)
-        self.screen.draw_color = (0, 255, 0, 0)
-        self.screen.draw_rect(rect)
-        self.screen.draw_color = (255, 0, 255, 0)
-        self.screen.draw_rect((pos, (2, 2)))
-        self.screen.draw_color = (0, 0, 0, 0)'''
-        #self.renderer.draw_rect((pygame.Vector2(pos) - (rect.w * offset[0], rect.h * offset[1]) + (rect.w/2, rect.h/2), (5, 5)))
-        #self.renderer.draw_rect(((pygame.Vector2(pos) -(pygame.Vector2(pos) - (rect.w * offset[0], rect.h * offset[1]) + (rect.w/2, rect.h/2))).rotate(-rotation)+pygame.Vector2(pos) - (rect.w * offset[0], rect.h * offset[1]) + (rect.w/2, rect.h/2), (5, 5)))
-        #print((pygame.Vector2(pos) -(pygame.Vector2(pos) - (rect.w * offset[0], rect.h * offset[1]) + (rect.w/2, rect.h/2))).rotate(-rotation)+pygame.Vector2(pos) - (rect.w * offset[0], rect.h * offset[1]) + (rect.w/2, rect.h/2)-pos)
-        #self.renderer.draw_color = (0, 0, 0, 0)
-
         return rect, rotation, absrect, rendered
 
     def rects(self, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, **kwargs):
 
-        rect = pygame.Rect()  # MultiSprite.rect
+        rect = pygame.Rect()
         rect.size = self.sprites[name][1].size
         rect.scale_by_ip(*scale)
         size = pygame.Vector2(rect.size)
@@ -141,7 +122,7 @@ class MultiSprite:
 
         r = abs((rotation + 90) % 180 - 90)
         area = pygame.Vector2(rect.size)
-        absrect = pygame.Rect()  # MultiSprite.absrect
+        absrect = pygame.Rect()
         absrect.size = area.rotate(-r).x, area.rotate(r).y
         absrect.center = rect.center
 
@@ -163,8 +144,6 @@ class MultiSprite:
         self.sprites[char] = (texture, rect)
 
     def write(self, text='', scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), align=1, rotation=0, flip=(0, 0), alpha=1):
-        # scaled from original given font size. pos = origin point
-        # rotation rotates whole text, flip applied to characters
 
         width = 0
         enter = 0
@@ -217,8 +196,6 @@ class MultiSprite:
         return linewidths
 
     def write_clamped(self, text='', width=1, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), align=1, rotation=0, flip=(0, 0), alpha=1):
-        # scaled from original given font size. pos = origin point
-        # rotation rotates whole text, flip applied to characters
 
         current_line = ""
         current_width = 0

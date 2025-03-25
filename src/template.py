@@ -4,6 +4,7 @@ from buttons import Button
 
 from assets import Assets
 
+
 class Template:
 
     def __init__(self):
@@ -25,7 +26,6 @@ class Template:
 
         Assets.font_white.write(Sm.app.title, scale=(2, 2), pos=(320, 120), relativeOffset=(0, 0), align=1)
 
-        Button.select(self.buttons)
         for button in self.buttons:
             button.update()
 

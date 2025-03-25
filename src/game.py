@@ -200,7 +200,6 @@ class Game:
         self.bvh = BVH(self.bvh_maxdepth, [self.monster, *self.boxes, *self.astros, *self.lasers])
         #self.bvh.draw(Sm.app.display)
         self.collisions = self.bvh.collisiondict()
-        #print(self.collisions)
         for key in self.collisions:
             key.collision(self.collisions[key])
         self.monster.bvh = self.bvh

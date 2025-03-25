@@ -1,9 +1,9 @@
 import pygame
 from multi_sprite_renderer_hardware import MultiSprite as msr
-from assets import Assets
+
 
 class Particle(pygame.sprite.Sprite):
-    dt = None  # has to be set every frame!
+    dt = None
 
     def __init__(self, pos, sprites: msr, animation, velocity, scale=None, relativeOffset=None, rotation=0, turn=0):
         # animation = List where first element is the lifetime of the particle, others are sprite index numbers
