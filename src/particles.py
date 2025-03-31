@@ -43,8 +43,11 @@ class Particle(pygame.sprite.Sprite):
                 self.draw()
 
     def draw(self):
-        self.rect = self.msr.draw(self.frame, pos=self.pos, scale=self.scale,
-                                  relativeOffset=self.relativeOffset, rotation=self.rotation, flip=(self.flipx, self.flipy))[2]
+        rects = self.msr.rects(self.frame, pos=self.pos, scale=self.scale,
+                                  relativeOffset=self.relativeOffset, rotation=self.rotation)
+        self.rect = rects[2]
+        self.msr.draw_only(self.frame, rects, flip=(self.flipx, self.flipy))
+
         if not self.rect[3]:
             self.kill()
 
