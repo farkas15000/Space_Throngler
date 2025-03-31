@@ -156,7 +156,7 @@ class Assets:
         sprite_slicer(144, 32, outputlist=linkedsprites, folders=(spritespath,), name='mobile_sprites1')
         cls.mobilesprites = Msr(images=linkedsprites)
 
-        cls.menu_texts_msr = Msr(folders=(spritespath,), names=("title", "credit farkas", "credit disa"))
+        cls.menu_texts_msr = Msr(folders=(spritespath,), names=("title",))
 
         linkedsprites.clear()
         sprite_slicer(59, 44, outputlist=linkedsprites, folders=(spritespath,), name='asteroid_sprites1')

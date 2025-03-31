@@ -92,7 +92,8 @@ class Menu:
             Assets.font_white.write(f'Size:{round(Sm.app.scale, 1)}x', scale=(2, 2), pos=(52, 400))
 
         Assets.menu_texts_msr.draw(0, scale=(3, 3), pos=(512, 150), relativeOffset=(0, 0))
-        Assets.menu_texts_msr.draw(1, scale=(2, 2), pos=(512, 480), relativeOffset=(0, 0))
+        Assets.font_white.write("Készítette: Füleki Balázs", pos=Sm.app.logical_sizeRect.midbottom, relativeOffset=(0, 1), scale=(2, 2))
+        #Assets.menu_texts_msr.draw(1, scale=(2, 2), pos=(512, 480), relativeOffset=(0, 0))
 
         eyepos = pygame.Vector2(599, 151)
         relativeOffset = -eyepos + Button.mousepos[1]

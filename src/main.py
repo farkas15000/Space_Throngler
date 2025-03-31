@@ -23,7 +23,7 @@ class App:
         self.winresolution = 1024, 600
         self.fullscreen = False
 
-        self.soundvolume = 0.1
+        self.soundvolume = 0.5
 
         self.damagemult = 1
         self.scale = 1
