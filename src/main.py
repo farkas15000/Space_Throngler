@@ -4,8 +4,6 @@ import pygame
 import sys
 import time
 from pygame._sdl2.video import Window, Renderer, Texture
-if sys.platform == "emscripten":
-    platform.window.canvas.style.imageRendering = "pixelated"
 
 from engine import StateMachine as Sm
 from buttons import Button
@@ -16,17 +14,20 @@ from particles import Particle
 import menu
 import scene
 
+if hasattr(platform, "window") and sys.platform == "emscripten":
+    platform.window.canvas.style.imageRendering = "pixelated"
+
 
 class App:
 
     def __init__(self):
-        self.winresolution = 1024, 600
+        self.winResolution = 1024, 600
         self.fullscreen = False
 
-        self.soundvolume = 0.5
+        self.soundVolume = 0.5
 
-        self.damagemult = 1
-        self.scale = 1
+        self.damageMult = 1
+        self.monsterScale = 1
 
         self.controls = {'Up': pygame.K_w,
                          'Down': pygame.K_s,
@@ -57,11 +58,16 @@ class App:
 
         self.dt = 0.016
         self.running = True
+        self.mousePos = None
+        self.mouseClickPos = None
+        self.mouseClicked = False
+        self.mouse = None
+        self.keyboard = None
 
         Button.controls = self.controls
 
-        Assets.makemsrs()
-        Assets.makeaudio()
+        Assets.makeMsrs()
+        Assets.makeAudio()
 
         menu.Menu()
         scene.Scene()
@@ -75,7 +81,7 @@ class App:
 
         for event in pygame.event.get():
             if event.type == pygame.WINDOWRESIZED and not self.fullscreen:
-                self.winresolution = self.window.size
+                self.winResolution = self.window.size
 
             if event.type == pygame.QUIT:
                 self.quit()
@@ -87,25 +93,25 @@ class App:
 
         rect = self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size))
 
-        self.mousepos[0].update(self.mousepos[1])
-        self.mousepos[1].update(pygame.mouse.get_pos())
-        self.mousepos[1].x -= rect.x
-        self.mousepos[1].y -= rect.y
+        self.mousePos[0].update(self.mousePos[1])
+        self.mousePos[1].update(pygame.mouse.get_pos())
+        self.mousePos[1].x -= rect.x
+        self.mousePos[1].y -= rect.y
         if not (self.mouse[1][0] or self.mouse[1][2] or self.mouse[1][1]):
-            self.mousepos[1].x = pygame.math.clamp(self.mousepos[1].x, 0, rect.w)
-            self.mousepos[1].y = pygame.math.clamp(self.mousepos[1].y, 0, rect.h)
-        self.mousepos[1].x *= self.logical_sizeRect.w / rect.w
-        self.mousepos[1].y *= self.logical_sizeRect.h / rect.h
-        self.mousepos[1].x = round(self.mousepos[1].x)
-        self.mousepos[1].y = round(self.mousepos[1].y)
+            self.mousePos[1].x = pygame.math.clamp(self.mousePos[1].x, 0, rect.w)
+            self.mousePos[1].y = pygame.math.clamp(self.mousePos[1].y, 0, rect.h)
+        self.mousePos[1].x *= self.logical_sizeRect.w / rect.w
+        self.mousePos[1].y *= self.logical_sizeRect.h / rect.h
+        self.mousePos[1].x = round(self.mousePos[1].x)
+        self.mousePos[1].y = round(self.mousePos[1].y)
 
-        Button.input(self.mousepos, self.mouse, self.keyboard)
+        Button.input(self.mousePos, self.mouse, self.keyboard)
 
-        self.mouseclicked = 0
+        self.mouseClicked = 0
         if self.mouse[1][0] and not self.mouse[0][0]:
-            self.mouseclicked = 1
-        if self.mouseclicked:
-            self.mouseclickpos = self.mousepos[1]
+            self.mouseClicked = 1
+        if self.mouseClicked:
+            self.mouseClickPos = self.mousePos[1]
 
         return fps_end - fps_start
 
@@ -136,19 +142,19 @@ class App:
                 self.window.set_fullscreen(True)
             else:
                 self.window.set_windowed()
-                self.winresolution = self.window.size
+                self.winResolution = self.window.size
         else:
             rect = pygame.Rect(*self.window.position, *self.window.size)
 
             self.window.set_windowed()
             self.fullscreen = False
-            self.winresolution = scale
+            self.winResolution = scale
             self.window.size = scale
 
             self.window.position = rect.centerx - self.window.size[0] / 2, rect.centery - self.window.size[1] / 2
 
         rect = self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size))
-        pygame.mouse.set_pos(self.mousepos[1].x / self.logical_sizeRect.w * rect.w + rect.x, self.mousepos[1].y / self.logical_sizeRect.h * rect.h + rect.y)
+        pygame.mouse.set_pos(self.mousePos[1].x / self.logical_sizeRect.w * rect.w + rect.x, self.mousePos[1].y / self.logical_sizeRect.h * rect.h + rect.y)
 
     def quit(self):
 
@@ -163,26 +169,26 @@ class App:
             self.display.target = None
 
     async def run(self):
-        self.mousepos = (pygame.Vector2(0, 0), pygame.Vector2(0, 0))
+        self.mousePos = (pygame.Vector2(0, 0), pygame.Vector2(0, 0))
         self.keyboard = (pygame.key.get_pressed(), pygame.key.get_pressed())
         self.mouse = (pygame.mouse.get_pressed(), pygame.mouse.get_pressed())
-        self.mouseclickpos = self.mousepos[1]
-        self.mouseclicked = 0
+        self.mouseClickPos = self.mousePos[1]
+        self.mouseClicked = 0
         self.events()
         frame = 0
 
         if self.fullscreen:
-            self.resize(self.winresolution)
+            self.resize(self.winResolution)
             self.resize()
         else:
-            self.resize(self.winresolution)
+            self.resize(self.winResolution)
 
         while self.running:  # main loop
             fps_start = time.perf_counter()
 
-            prevstate = Sm.state
+            prev_state = Sm.state
 
-            eventtime = self.events()
+            event_time = self.events()
 
             # debug
             if self.keys((self.controls["Fullscreen"],))[0]:
@@ -190,7 +196,7 @@ class App:
 
             self.display.draw_color = (0, 0, 0, 0)
             self.display.target = self.screen
-            Msr.screenrect = self.logical_sizeRect
+            Msr.screenRect = self.logical_sizeRect
             self.display.clear()
 
             Particle.dt = self.dt
@@ -198,7 +204,7 @@ class App:
             Sm.states[Sm.state]()
 
             self.display.target = None
-            Msr.screenrect = self.display.get_viewport()
+            Msr.screenRect = self.display.get_viewport()
             self.display.draw_color = (15, 15, 15, 0)
             self.display.clear()
 
@@ -206,21 +212,22 @@ class App:
 
             self.display.present()
 
-            Sm.prevstate = prevstate
-
-            fps_end = time.perf_counter()
-            dt = fps_end - fps_start - eventtime
+            Sm.prevState = prev_state
 
             # debug fps
+            '''
+            fps_end = time.perf_counter()
+            dt = fps_end - fps_start - event_time
             if frame % 8 == 0 and dt:
                 frame = 0
                 self.window.title = f"FPS: {int(1 / dt)}, {round(self.clock.get_fps(), 1)} W:{self.window.size[0]} {self.window.size[1]}"
             frame += 1
+            '''
 
             await asyncio.sleep(0)
             self.clock.tick(60)
             fps_end2 = time.perf_counter()
-            self.dt = min(fps_end2 - fps_start - eventtime, 0.1)
+            self.dt = min(fps_end2 - fps_start - event_time, 0.1)
 
 
 if __name__ == '__main__':

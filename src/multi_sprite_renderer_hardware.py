@@ -1,7 +1,3 @@
-'''
-This is the _sdl2 variant.
-'''
-
 import math
 import pygame
 from os.path import join
@@ -30,18 +26,18 @@ def rotated_collision(rect1: (pygame.Rect, float), rect2: (pygame.Rect, float)):
 
 class MultiSprite:
     screen = None
-    screenrect = None
+    screenRect = None
     rect = pygame.Rect()
-    absrect = pygame.Rect()
+    absRect = pygame.Rect()
 
     @classmethod
-    def setScreen(cls, screen: Renderer):
+    def setScreen(cls, screen: Renderer | Texture):
         cls.screen = screen
         try:
-            cls.screenrect = screen.get_viewport()
+            cls.screenRect = screen.get_viewport()
         except AttributeError:
-            cls.screenrect = screen.get_rect()
-        cls.screenrect.x, cls.screenrect.y = 0, 0
+            cls.screenRect = screen.get_rect()
+        cls.screenRect.x, cls.screenRect.y = 0, 0
 
     @classmethod
     def flip(cls):
@@ -82,7 +78,7 @@ class MultiSprite:
             self.font.set_bold(bold)
             self.font.set_italic(italic)
 
-            for char in ' !"#$%& \'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~\n':
+            for char in ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~\n':
                 img = self.font.render(char, AA, color, background)
                 texture = Texture.from_surface(MultiSprite.screen, img)
                 texture.blend_mode = pygame.BLENDMODE_BLEND
@@ -90,47 +86,47 @@ class MultiSprite:
 
                 self.sprites[char] = (texture, rect)
 
-    def draw(self, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, flip=(0, 0), alpha=1):
+    def draw(self, name: int | str = 0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, flip=(0, 0), alpha=1):
 
         rect = MultiSprite.rect
         rect.size = self.sprites[name][1].size
         rect.scale_by_ip(*scale)
         size = pygame.Vector2(rect.size)
-        topleft = -pygame.Vector2(size.x * relativeOffset[0] + offset[0], size.y * relativeOffset[1] + offset[1]).rotate(-rotation) + size // -2 + pos
-        rect.topleft = math.floor(topleft.x + 0.00001), math.floor(topleft.y + 0.00001)
+        top_left = -pygame.Vector2(size.x * relativeOffset[0] + offset[0], size.y * relativeOffset[1] + offset[1]).rotate(-rotation) + size // -2 + pos
+        rect.topleft = math.floor(top_left.x + 0.00001), math.floor(top_left.y + 0.00001)
 
         r = abs((rotation+90) % 180-90)
         area = pygame.Vector2(rect.size)
-        absrect = MultiSprite.absrect
-        absrect.size = area.rotate(-r).x, area.rotate(r).y
-        absrect.center = rect.center
+        abs_rect = MultiSprite.absRect
+        abs_rect.size = area.rotate(-r).x, area.rotate(r).y
+        abs_rect.center = rect.center
 
-        if rendered := MultiSprite.screenrect.colliderect(absrect) and alpha > 0:
+        if rendered := MultiSprite.screenRect.colliderect(abs_rect) and alpha > 0:
             self.sprites[name][0].alpha = 255*alpha
             self.sprites[name][0].draw(dstrect=rect, angle=-rotation, origin=None, flip_x=flip[0], flip_y=flip[1])
 
-        return rect, rotation, absrect, rendered
+        return rect, rotation, abs_rect, rendered
 
-    def rects(self, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, **kwargs):
+    def rects(self, name: int | str = 0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, **kwargs):
 
         rect = pygame.Rect()
         rect.size = self.sprites[name][1].size
         rect.scale_by_ip(*scale)
         size = pygame.Vector2(rect.size)
-        topleft = -pygame.Vector2(size.x * relativeOffset[0] + offset[0], size.y * relativeOffset[1] + offset[1]).rotate(-rotation) + size // -2 + pos
-        rect.topleft = math.floor(topleft.x + 0.00001), math.floor(topleft.y + 0.00001)
+        top_left = -pygame.Vector2(size.x * relativeOffset[0] + offset[0], size.y * relativeOffset[1] + offset[1]).rotate(-rotation) + size // -2 + pos
+        rect.topleft = math.floor(top_left.x + 0.00001), math.floor(top_left.y + 0.00001)
 
         r = abs((rotation + 90) % 180 - 90)
         area = pygame.Vector2(rect.size)
-        absrect = pygame.Rect()
-        absrect.size = area.rotate(-r).x, area.rotate(r).y
-        absrect.center = rect.center
+        abs_rect = pygame.Rect()
+        abs_rect.size = area.rotate(-r).x, area.rotate(r).y
+        abs_rect.center = rect.center
 
-        return rect, rotation, absrect, MultiSprite.screenrect.colliderect(absrect)
+        return rect, rotation, abs_rect, MultiSprite.screenRect.colliderect(abs_rect)
 
-    def draw_only(self, name=0, rects=None, flip=(0, 0), alpha=1, **kwargs):
+    def draw_only(self, name: int | str = 0, rects=None, flip=(0, 0), alpha=1, **kwargs):
 
-        if rendered := MultiSprite.screenrect.colliderect(rects[2]) and alpha > 0:
+        if rendered := MultiSprite.screenRect.colliderect(rects[2]) and alpha > 0:
             self.sprites[name][0].alpha = 255 * alpha
             self.sprites[name][0].draw(dstrect=rects[0], angle=-rects[1], origin=None, flip_x=flip[0], flip_y=flip[1])
 
@@ -150,15 +146,15 @@ class MultiSprite:
         lines = text.split('\n')
         y = relativeOffset[1] * len(lines) + (len(lines) - 1) * 0.5
 
-        linewidths = list(0 for _ in range(len(lines)))
+        line_widths = list(0 for _ in range(len(lines)))
         for k, line in enumerate(lines):
             for char in line:
                 try:
-                    linewidths[k] += int(self.sprites[char][1].w * scale[0])
+                    line_widths[k] += int(self.sprites[char][1].w * scale[0])
                 except KeyError:
                     self.add_char(char)
-                    linewidths[k] += int(self.sprites[char][1].w * scale[0])
-        widest = max(linewidths)
+                    line_widths[k] += int(self.sprites[char][1].w * scale[0])
+        widest = max(line_widths)
 
         if align == 1:  # left
             pos = (pos[0] + (widest * (-relativeOffset[0] - 0.5)), pos[1])
@@ -187,95 +183,10 @@ class MultiSprite:
                     w = int(self.sprites[line[k]][1].w * scale[0])
                     self.draw(name=line[k], scale=scale, pos=pos,
                               relativeOffset=(width / w - 0.5, y - enter / self.sprites[line[k]][1].h),
-                              offset=(linewidths[lk] * 0.5, 0), rotation=rotation, flip=flip, alpha=alpha)
+                              offset=(line_widths[lk] * 0.5, 0), rotation=rotation, flip=flip, alpha=alpha)
                     width -= w
 
             width = 0
             enter += self.sprites['A'][1].h
 
-        return linewidths
-
-    def write_clamped(self, text='', width=1, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), align=1, rotation=0, flip=(0, 0), alpha=1):
-
-        current_line = ""
-        current_width = 0
-        result = ""
-        for char in text:
-            try:
-                char_w = int(self.sprites[char][1].w * scale[0])
-            except KeyError:
-                self.add_char(char)
-                char_w = int(self.sprites[char][1].w * scale[0])
-            # Check if adding this character would exceed the max_width
-            if current_width + char_w > width:
-                # Find the last space in the current line to break the line
-                last_space_index = current_line.rfind(' ')
-                if last_space_index != -1:
-                    # Break the line at the last space
-                    result += current_line[:last_space_index] + '\n'
-                    # Start the new line with the remainder after the space
-                    current_line = current_line[last_space_index + 1:] + char
-                    current_width = sum(int(self.sprites[char][1].w * scale[0]) for c in current_line)
-                else:
-                    # No spaces, force break the line
-                    result += current_line + '\n'
-                    if char != ' ':
-                        current_line = char
-                        current_width = char_w
-                    else:
-                        current_line = ''
-                        current_width = 0
-            else:
-                current_line += char
-                current_width += char_w
-        # Add the remaining line if there's any text left
-        result += current_line
-
-        lines = result.split('\n')
-        y = relativeOffset[1] * len(lines) + (len(lines) - 1) * 0.5
-
-        linewidths = list(0 for line in range(len(lines)))
-        for k, line in enumerate(lines):
-            for char in line:
-                linewidths[k] += int(self.sprites[char][1].w * scale[0])
-        widest = max(linewidths)
-
-        if align == 1:  # left
-            pos = (pos[0] + (widest * (-relativeOffset[0] - 0.5)), pos[1])
-        elif align == -1:  # right
-            pos = (pos[0] + (widest * (-relativeOffset[0] + 0.5)), pos[1])
-        elif align == 0:  # center
-            pos = (pos[0] + (widest * (-relativeOffset[0])), pos[1])
-
-        width = 0
-        enter = 0
-        for lk, line in enumerate(lines):
-            for k, char in enumerate(line):
-                if align == 1:  # left
-                    w = int(self.sprites[line[k]][1].w * scale[0])
-                    self.draw(name=line[k], scale=scale, pos=pos,
-                              relativeOffset=(width / w - 0.5, y - enter / self.sprites[line[k]][1].h),
-                              rotation=rotation, flip=flip, alpha=alpha)
-                    width -= w
-
-                elif align == -1:  # right
-                    w = int(self.sprites[line[-k - 1]][1].w * scale[0])
-                    self.draw(name=line[-k - 1], scale=scale, pos=pos,
-                              relativeOffset=(width / w + 0.5, y - enter / self.sprites[line[-k - 1]][1].h),
-                              rotation=rotation, flip=flip, alpha=alpha)
-                    width += w
-
-                elif align == 0:  # center
-                    w = int(self.sprites[line[k]][1].w * scale[0])
-                    self.draw(name=line[k], scale=scale, pos=pos,
-                              relativeOffset=(width / w - 0.5, y - enter / self.sprites[line[k]][1].h),
-                              offset=(linewidths[lk] * 0.5, 0), rotation=rotation, flip=flip, alpha=alpha)
-                    width -= w
-
-            width = 0
-            enter += self.sprites['A'][1].h
-
-        return linewidths
-
-    def __len__(self):
-        return len(self.sprites)
+        return line_widths

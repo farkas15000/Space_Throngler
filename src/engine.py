@@ -1,12 +1,12 @@
 
 class StateMachine:
     states = dict()
-    loadins = []
+    loadIns = []
     state = None
-    prevstate = None
+    prevState = None
     app = None
 
     @classmethod
     def loadin(cls):
-        for load in cls.loadins:
+        for load in cls.loadIns:
             load()

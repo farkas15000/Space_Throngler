@@ -2,42 +2,42 @@ import os.path
 import pygame
 from multi_sprite_renderer_hardware import MultiSprite as Msr
 
-abspath = os.path.dirname(os.path.abspath(__name__))
-print(abspath)
+absPath = os.path.dirname(os.path.abspath(__name__))
+print(absPath)
 
-spritespath = os.path.join(abspath, 'assets', 'sprites')
-audiopath = os.path.join(abspath, 'assets', 'audio')
-fontpath = os.path.join(abspath, 'assets', 'fonts')
+spritesPath = os.path.join(absPath, 'assets', 'sprites')
+audioPath = os.path.join(absPath, 'assets', 'audio')
+fontPath = os.path.join(absPath, 'assets', 'fonts')
 
 
-def sprite_slicer(width, height, wpad=0, hpad=0, outputlist=None, folders=(), name='', sprite=None):
+def sprite_slicer(width, height, wpad=0, hpad=0, outputList=None, folders=(), name='', surface=None):
     # cuts up image from file or Surface with optional padding and output list
 
     if width <= 0 or height <= 0:
         raise Exception('need area!')
 
-    if sprite is None:
+    if surface is None:
         img = pygame.image.load(os.path.join(*folders, name + '.png'))
     else:
-        img = sprite
+        img = surface
     imgh = img.get_height()
     col = 0
-    if outputlist is None:
-        outputlist = []
+    if outputList is None:
+        outputList = []
 
     while imgh // height > 0:
         imgw = img.get_width()
         row = 0
         while imgw//width > 0:
             imgw -= width+wpad
-            sprite = img.subsurface(pygame.Rect(row * (width+wpad), col * (height+hpad), width, height))
-            outputlist.append(sprite)
+            surface = img.subsurface(pygame.Rect(row * (width + wpad), col * (height + hpad), width, height))
+            outputList.append(surface)
             row += 1
 
         imgh -= height + hpad
         col += 1
 
-    return outputlist
+    return outputList
 
 
 class Assets:
@@ -46,130 +46,130 @@ class Assets:
     font_white = Msr()
     ship = Msr()
     shade = Msr()
-    doorsprites = Msr()
-    rocketsprites = Msr()
-    monstersprites = Msr()
-    boxsprites = Msr()
-    astronautsprites = Msr()
-    lasersprites = Msr()
-    bloodsprites = Msr()
-    particlesprites = Msr()
-    buttonsprites = Msr()
-    pausesprites = Msr()
-    startsprites = Msr()
-    soundsprites = Msr()
-    eastereggsprite = Msr()
-    mobilesprites = Msr()
-    menu_texts_msr = Msr()
-    asteroidsprites = Msr()
+    doorSprites = Msr()
+    rocketSprites = Msr()
+    monsterSprites = Msr()
+    boxSprites = Msr()
+    astronautSprites = Msr()
+    laserSprites = Msr()
+    bloodSprites = Msr()
+    particleSprites = Msr()
+    buttonSprites = Msr()
+    pauseSprites = Msr()
+    startSprites = Msr()
+    soundSprites = Msr()
+    easterEggSprite = Msr()
+    mobileSprites = Msr()
+    menuTextSprites = Msr()
+    asteroidSprites = Msr()
 
-    asteroidsound: pygame.mixer.Sound
-    clearedsound: pygame.mixer.Sound
-    boxsounds: tuple[pygame.mixer.Sound]
-    boxhitsounds: tuple[pygame.mixer.Sound]
-    lasersounds: tuple[pygame.mixer.Sound]
-    laserhitsounds: tuple[pygame.mixer.Sound]
+    asteroidSound: pygame.mixer.Sound
+    clearedSound: pygame.mixer.Sound
+    boxSounds: tuple[pygame.mixer.Sound, ...]
+    boxHitSounds: tuple[pygame.mixer.Sound, ...]
+    laserSounds: tuple[pygame.mixer.Sound, ...]
+    laserHitSounds: tuple[pygame.mixer.Sound, ...]
 
     @classmethod
-    def makemsrs(cls):
-        colorkey = (163, 73, 164)
+    def makeMsrs(cls):
+        color_key = (163, 73, 164)
 
-        linkedsprites = []
+        linked_sprites = []
 
-        cls.font_black(folders=(fontpath,), font='VCR_OSD_MONO_1.001', size=21, color='Black')
-        cls.font_white = Msr(folders=(fontpath,), font='VCR_OSD_MONO_1.001', size=21)
+        cls.font_black(folders=(fontPath,), font='VCR_OSD_MONO_1.001', size=21, color='Black')
+        cls.font_white = Msr(folders=(fontPath,), font='VCR_OSD_MONO_1.001', size=21)
 
-        ship = pygame.image.load(os.path.join(spritespath, 'ship5' + '.png'))
+        ship = pygame.image.load(os.path.join(spritesPath, 'ship5' + '.png'))
         ship.fill((234, 234, 234, 255), (50, 18, 412, 264))
-        ship.set_colorkey(colorkey)
+        ship.set_colorkey(color_key)
         ship = pygame.transform.scale_by(ship, 2)
         cls.ship = Msr(images=(ship,))
 
         shade = pygame.Surface((1, 1))
         cls.shade = Msr(images=(shade,))
 
-        doors = pygame.image.load(os.path.join(spritespath, 'doors1' + '.png'))
-        doors.set_colorkey(colorkey)
+        doors = pygame.image.load(os.path.join(spritesPath, 'doors1' + '.png'))
+        doors.set_colorkey(color_key)
         doors = pygame.transform.scale_by(doors, 2)
-        sprite_slicer(30 * 2, 36 * 2, wpad=2 * 2, outputlist=linkedsprites, sprite=doors)
-        cls.doorsprites = Msr(images=linkedsprites)
+        sprite_slicer(30 * 2, 36 * 2, wpad=2 * 2, outputList=linked_sprites, surface=doors)
+        cls.doorSprites = Msr(images=linked_sprites)
 
-        rocket = pygame.image.load(os.path.join(spritespath, 'rocket' + '.png'))
-        rocket.set_colorkey(colorkey)
+        rocket = pygame.image.load(os.path.join(spritesPath, 'rocket' + '.png'))
+        rocket.set_colorkey(color_key)
         rocket = pygame.transform.scale_by(rocket, 2)
-        cls.rocketsprites = Msr(images=(rocket,))
+        cls.rocketSprites = Msr(images=(rocket,))
 
         healthbox = pygame.Surface((32, 8))
         healthbox.fill((255, 255, 255, 255), (1, 1, 30, 6))
         health = pygame.Surface((32, 8))
-        health.fill(colorkey)
-        health.set_colorkey(colorkey)
+        health.fill(color_key)
+        health.set_colorkey(color_key)
         health.fill((138, 15, 52), (1, 1, 30, 6))
-        cls.monstersprites = Msr(folders=(spritespath,), names=("head", "eye", "limb", "joint"), images=(healthbox, health))
+        cls.monsterSprites = Msr(folders=(spritesPath,), names=("head", "eye", "limb", "joint"), images=(healthbox, health))
 
-        linkedsprites.clear()
-        sprite_slicer(22, 22, outputlist=linkedsprites, folders=(spritespath,), name='box_sprites1')
-        boxoutline = pygame.image.load(os.path.join(spritespath, 'boxoutline' + '.png'))
-        boxoutline.set_colorkey(colorkey)
-        linkedsprites.append(boxoutline)
+        linked_sprites.clear()
+        sprite_slicer(22, 22, outputList=linked_sprites, folders=(spritesPath,), name='box_sprites1')
+        boxoutline = pygame.image.load(os.path.join(spritesPath, 'boxoutline' + '.png'))
+        boxoutline.set_colorkey(color_key)
+        linked_sprites.append(boxoutline)
         boxshadow = pygame.Surface((22, 22))
-        linkedsprites.append(boxshadow)
-        cls.boxsprites = Msr(images=linkedsprites)
+        linked_sprites.append(boxshadow)
+        cls.boxSprites = Msr(images=linked_sprites)
 
-        linkedsprites.clear()
-        sprite_slicer(24, 24, outputlist=linkedsprites, folders=(spritespath,), name='astronaut_walk_sprites1')
-        sprite_slicer(24, 24, outputlist=linkedsprites, folders=(spritespath,), name='astronaut_die_sprites1')
-        cls.astronautsprites = Msr(images=linkedsprites)
+        linked_sprites.clear()
+        sprite_slicer(24, 24, outputList=linked_sprites, folders=(spritesPath,), name='astronaut_walk_sprites1')
+        sprite_slicer(24, 24, outputList=linked_sprites, folders=(spritesPath,), name='astronaut_die_sprites1')
+        cls.astronautSprites = Msr(images=linked_sprites)
 
-        cls.lasersprites = Msr(folders=(spritespath,), names=("laser1",))
+        cls.laserSprites = Msr(folders=(spritesPath,), names=("laser1",))
 
-        linkedsprites.clear()
-        sprite_slicer(6, 6, wpad=1, hpad=1, outputlist=linkedsprites, folders=(spritespath,), name='blood1')
-        cls.bloodsprites = Msr(images=linkedsprites)
+        linked_sprites.clear()
+        sprite_slicer(6, 6, wpad=1, hpad=1, outputList=linked_sprites, folders=(spritesPath,), name='blood1')
+        cls.bloodSprites = Msr(images=linked_sprites)
 
-        particles = pygame.image.load(os.path.join(spritespath, 'particles1' + '.png'))
-        particles.set_colorkey(colorkey)
-        linkedsprites.clear()
-        sprite_slicer(7, 7, wpad=1, hpad=1, outputlist=linkedsprites, sprite=particles)
-        cls.particlesprites = Msr(images=linkedsprites)
+        particles = pygame.image.load(os.path.join(spritesPath, 'particles1' + '.png'))
+        particles.set_colorkey(color_key)
+        linked_sprites.clear()
+        sprite_slicer(7, 7, wpad=1, hpad=1, outputList=linked_sprites, surface=particles)
+        cls.particleSprites = Msr(images=linked_sprites)
 
-        exitB = pygame.image.load(os.path.join(spritespath, 'exit' + '.png'))
-        exitB.set_colorkey(colorkey)
-        cls.buttonsprites = Msr(images=(exitB,))
+        exitB = pygame.image.load(os.path.join(spritesPath, 'exit' + '.png'))
+        exitB.set_colorkey(color_key)
+        cls.buttonSprites = Msr(images=(exitB,))
 
-        linkedsprites.clear()
-        pauseB = pygame.image.load(os.path.join(spritespath, 'pause' + '.png'))
-        pauseB.set_colorkey(colorkey)
-        sprite_slicer(38, 20, outputlist=linkedsprites, sprite=pauseB)
-        cls.pausesprites = Msr(images=linkedsprites)
+        linked_sprites.clear()
+        pauseB = pygame.image.load(os.path.join(spritesPath, 'pause' + '.png'))
+        pauseB.set_colorkey(color_key)
+        sprite_slicer(38, 20, outputList=linked_sprites, surface=pauseB)
+        cls.pauseSprites = Msr(images=linked_sprites)
 
-        cls.startsprites = Msr(folders=(spritespath,), names=('start1',))
+        cls.startSprites = Msr(folders=(spritesPath,), names=('start1',))
 
         soundbar = pygame.Surface((198, 16))
         soundbar.fill((255, 255, 255, 255))
-        cls.soundsprites = Msr(folders=(spritespath,), names=('sound', 'sound knob'),
-                                images=(soundbar,))
+        cls.soundSprites = Msr(folders=(spritesPath,), names=('sound', 'sound knob'),
+                               images=(soundbar,))
 
-        cls.eastereggsprite = Msr(folders=(spritespath,), names=("easter egg",))
+        cls.easterEggSprite = Msr(folders=(spritesPath,), names=("easter egg",))
 
-        linkedsprites.clear()
-        sprite_slicer(144, 32, outputlist=linkedsprites, folders=(spritespath,), name='mobile_sprites1')
-        cls.mobilesprites = Msr(images=linkedsprites)
+        linked_sprites.clear()
+        sprite_slicer(144, 32, outputList=linked_sprites, folders=(spritesPath,), name='mobile_sprites1')
+        cls.mobileSprites = Msr(images=linked_sprites)
 
-        cls.menu_texts_msr = Msr(folders=(spritespath,), names=("title",))
+        cls.menuTextSprites = Msr(folders=(spritesPath,), names=("title",))
 
-        linkedsprites.clear()
-        sprite_slicer(59, 44, outputlist=linkedsprites, folders=(spritespath,), name='asteroid_sprites1')
-        cls.asteroidsprites = Msr(images=linkedsprites)
+        linked_sprites.clear()
+        sprite_slicer(59, 44, outputList=linked_sprites, folders=(spritesPath,), name='asteroid_sprites1')
+        cls.asteroidSprites = Msr(images=linked_sprites)
 
     @classmethod
-    def makeaudio(cls):
+    def makeAudio(cls):
 
-        pygame.mixer.music.load(os.path.join(audiopath, 'space.ogg'))
+        pygame.mixer.music.load(os.path.join(audioPath, 'space.ogg'))
 
-        cls.asteroidsound = pygame.mixer.Sound(f'{audiopath}/crash.ogg')
-        cls.clearedsound = pygame.mixer.Sound(f'{audiopath}/cleared.ogg')
-        cls.boxsounds = tuple(pygame.mixer.Sound(f'{audiopath}/box{x + 1}.ogg') for x in range(4))
-        cls.boxhitsounds = tuple(pygame.mixer.Sound(f'{audiopath}/boxhit{x + 1}.ogg') for x in range(4))
-        cls.lasersounds = tuple(pygame.mixer.Sound(f'{audiopath}/laserShoot_{x + 1}_.ogg') for x in range(4))
-        cls.laserhitsounds = tuple(pygame.mixer.Sound(f'{audiopath}/hitHurt_{x + 1}_.ogg') for x in range(4))
+        cls.asteroidSound = pygame.mixer.Sound(f'{audioPath}/crash.ogg')
+        cls.clearedSound = pygame.mixer.Sound(f'{audioPath}/cleared.ogg')
+        cls.boxSounds = tuple(pygame.mixer.Sound(f'{audioPath}/box{x + 1}.ogg') for x in range(4))
+        cls.boxHitSounds = tuple(pygame.mixer.Sound(f'{audioPath}/boxhit{x + 1}.ogg') for x in range(4))
+        cls.laserSounds = tuple(pygame.mixer.Sound(f'{audioPath}/laserShoot_{x + 1}_.ogg') for x in range(4))
+        cls.laserHitSounds = tuple(pygame.mixer.Sound(f'{audioPath}/hitHurt_{x + 1}_.ogg') for x in range(4))

@@ -58,67 +58,64 @@ class BVH(pygame.sprite.Sprite):
         else:
             self.sprites = hold
 
-    def collisionset(self, hitset=None):
+    def collisionSet(self, hit_set=None):
         # returns a set with non-repeating collides object pairs in tuples
 
-        if hitset is None:
-            hitset = set()
+        if hit_set is None:
+            hit_set = set()
         if not self.sprites:
             for child in self.child:
-                child.collisionset(hitset)
+                child.collisionSet(hit_set)
         else:
             for x, item1 in enumerate(self.sprites):
                 for item2 in self.sprites[x + 1:]:
-                    if (item1, item2) not in hitset and pygame.sprite.collide_rect(item1, item2):
-                        hitset.add((item1, item2))
-        return hitset
+                    if (item1, item2) not in hit_set and pygame.sprite.collide_rect(item1, item2):
+                        hit_set.add((item1, item2))
+        return hit_set
 
-    def collisiondict(self, hitdict=None):
+    def collisionDict(self, hit_dict=None):
         # returns a dict where the keys are all the objects that had collisions and the values are all the collided objects in a set
-        # probably slower than collisionset but easier to use
+        # probably slower than collisionSet but easier to use
 
-        if hitdict is None:
-            hitdict = dict()
+        if hit_dict is None:
+            hit_dict = dict()
         if not self.sprites:
             for child in self.child:
-                child.collisiondict(hitdict)
+                child.collisionDict(hit_dict)
         else:
             for x, item1 in enumerate(self.sprites):
                 for item2 in self.sprites[x + 1:]:
                     if pygame.sprite.collide_rect(item1, item2):
 
-                        if item1 not in hitdict:
-                            hitdict[item1] = set()
-                        hitdict[item1].add(item2)
+                        if item1 not in hit_dict:
+                            hit_dict[item1] = set()
+                        hit_dict[item1].add(item2)
 
-                        if item2 not in hitdict:
-                            hitdict[item2] = set()
-                        hitdict[item2].add(item1)
+                        if item2 not in hit_dict:
+                            hit_dict[item2] = set()
+                        hit_dict[item2].add(item1)
 
-        return hitdict
+        return hit_dict
 
-    def collisionrect(self, rect, hitset=None, draw=None):
+    def collisionRect(self, rect, hit_set=None, draw=None):
         # returns a set of all the collided objects with the given rect
         # debug draw shows the hit tree nodes. needs render surface
 
-        if hitset is None:
-            hitset = set()
+        if hit_set is None:
+            hit_set = set()
 
         if self.rect.colliderect(rect):
             if not self.sprites:
                 for child in self.child:
-                    child.collisionrect(rect, hitset, draw=draw)
+                    child.collisionRect(rect, hit_set, draw=draw)
             else:
                 for item1 in self.sprites:
                     if rect.colliderect(item1.rect):
-                        hitset.add(item1)
-                        #if draw:
-                        #    renderer.draw_color = (255, 0, 255, 0)
-                        #    renderer.draw_rect(item1.rect)
+                        hit_set.add(item1)
             if draw:
                 self.root(draw)
 
-        return hitset
+        return hit_set
 
     def draw(self, renderer: Renderer):
         # draws the whole tree
@@ -147,8 +144,8 @@ class BVH(pygame.sprite.Sprite):
 class Collider:
     # dummy object for BVH
 
-    def __init__(self, absrect):
-        self.rect = absrect
+    def __init__(self, abs_rect):
+        self.rect = abs_rect
 
     def collision(self, hits):
         pass
