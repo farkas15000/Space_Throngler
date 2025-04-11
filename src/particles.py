@@ -5,9 +5,20 @@ from multi_sprite_renderer_hardware import MultiSprite as Msr
 class Particle(pygame.sprite.Sprite):
     dt = None
 
-    def __init__(self, pos, sprites: Msr, animation, velocity, scale=None, relativeOffset=None, rotation=0, turn=0):
+    def __init__(
+        self,
+        pos,
+        sprites: Msr,
+        animation,
+        velocity,
+        scale=None,
+        relativeOffset=None,
+        rotation=0,
+        turn=0,
+    ):
         """
-        animation: List where first element is the lifetime of the particle, others are sprite index numbers
+        animation: List where first element is the lifetime of the particle,
+        others are sprite index numbers
         velocity: moving direction, turn: turning speed
         """
 
@@ -36,16 +47,22 @@ class Particle(pygame.sprite.Sprite):
 
     def update(self, mode=None):
         match mode:
-            case 'draw':
+            case "draw":
                 self.draw()
-            case 'loop':
+            case "loop":
                 self.loop()
             case _:
                 self.loop()
                 self.draw()
 
     def draw(self):
-        rects = self.msr.rects(self.frame, pos=self.pos, scale=self.scale, relativeOffset=self.relativeOffset, rotation=self.rotation)
+        rects = self.msr.rects(
+            self.frame,
+            pos=self.pos,
+            scale=self.scale,
+            relativeOffset=self.relativeOffset,
+            rotation=self.rotation,
+        )
         self.rect = rects[2]
         self.msr.draw_only(self.frame, rects, flip=(self.flipX, self.flipy))
 
@@ -56,7 +73,9 @@ class Particle(pygame.sprite.Sprite):
         length = len(self.animation) - 1
         full = self.animation[0]
         duration = full / length
-        self.frame = self.animation[int((self.animTimer // duration) % length + 1)]
+        self.frame = self.animation[
+            int((self.animTimer // duration) % length + 1)
+        ]
         self.animTimer += Particle.dt
         if self.animTimer >= full:
             self.animTimer %= full

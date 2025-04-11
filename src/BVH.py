@@ -30,7 +30,7 @@ class BVH(pygame.sprite.Sprite):
                         brx = rect.right
                     if rect.bottom > bry:
                         bry = rect.bottom
-                self.rect = pygame.rect.Rect(tlx, tly, brx-tlx, bry-tly)
+                self.rect = pygame.rect.Rect(tlx, tly, brx - tlx, bry - tly)
             else:
                 self.rect = pygame.rect.Rect(0, 0, 0, 0)
             hold = sprites
@@ -44,20 +44,63 @@ class BVH(pygame.sprite.Sprite):
         self.child = tuple()
         self.sprites = []
 
-        if self.depth < max_depth and len(hold) > 2 and self.rect.w >= 8 and self.rect.h >= 8:
+        if (
+            self.depth < max_depth
+            and len(hold) > 2
+            and self.rect.w >= 8
+            and self.rect.h >= 8
+        ):
             w = self.rect.w % 2
             h = self.rect.h % 2
 
             if self.depth % 2 == 0:
-                lelt = pygame.rect.Rect(self.rect.x, self.rect.y, self.rect.w // 2 + w, self.rect.h)
-                right = pygame.rect.Rect(self.rect.x + self.rect.w // 2 + w, self.rect.y, self.rect.w // 2, self.rect.h)
-                self.child = (BVH(max_depth=max_depth, sprites=hold, rect=lelt, depth=self.depth+1),
-                              BVH(max_depth=max_depth, sprites=hold, rect=right, depth=self.depth+1))
+                left = pygame.rect.Rect(
+                    self.rect.x, self.rect.y, self.rect.w // 2 + w, self.rect.h
+                )
+                right = pygame.rect.Rect(
+                    self.rect.x + self.rect.w // 2 + w,
+                    self.rect.y,
+                    self.rect.w // 2,
+                    self.rect.h,
+                )
+                self.child = (
+                    BVH(
+                        max_depth=max_depth,
+                        sprites=hold,
+                        rect=left,
+                        depth=self.depth + 1,
+                    ),
+                    BVH(
+                        max_depth=max_depth,
+                        sprites=hold,
+                        rect=right,
+                        depth=self.depth + 1,
+                    ),
+                )
             else:
-                top = pygame.rect.Rect(self.rect.x, self.rect.y, self.rect.w, self.rect.h//2+h)
-                down = pygame.rect.Rect(self.rect.x, self.rect.y+self.rect.h//2+h, self.rect.w, self.rect.h//2+h)
-                self.child = (BVH(max_depth=max_depth, sprites=hold, rect=top, depth=self.depth + 1),
-                              BVH(max_depth=max_depth, sprites=hold, rect=down, depth=self.depth + 1))
+                top = pygame.rect.Rect(
+                    self.rect.x, self.rect.y, self.rect.w, self.rect.h // 2 + h
+                )
+                down = pygame.rect.Rect(
+                    self.rect.x,
+                    self.rect.y + self.rect.h // 2 + h,
+                    self.rect.w,
+                    self.rect.h // 2 + h,
+                )
+                self.child = (
+                    BVH(
+                        max_depth=max_depth,
+                        sprites=hold,
+                        rect=top,
+                        depth=self.depth + 1,
+                    ),
+                    BVH(
+                        max_depth=max_depth,
+                        sprites=hold,
+                        rect=down,
+                        depth=self.depth + 1,
+                    ),
+                )
         else:
             self.sprites = hold
 
@@ -72,13 +115,20 @@ class BVH(pygame.sprite.Sprite):
         else:
             for x, item1 in enumerate(self.sprites):
                 for item2 in self.sprites[x + 1:]:
-                    if (item1, item2) not in hit_set and pygame.sprite.collide_rect(item1, item2):
+                    if (
+                        item1,
+                        item2,
+                    ) not in hit_set and pygame.sprite.collide_rect(
+                        item1, item2
+                    ):
                         hit_set.add((item1, item2))
         return hit_set
 
     def collisionDict(self, hit_dict=None):
         """
-        returns a dict where the keys are all the objects that had collisions and the values are all the collided objects in a set
+        returns a dict where the keys are all the objects
+        that had collisions and the values are all
+        the collided objects in a set
         """
 
         if hit_dict is None:

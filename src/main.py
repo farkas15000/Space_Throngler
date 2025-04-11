@@ -29,17 +29,21 @@ class App:
         self.damageMult = 1
         self.monsterScale = 1
 
-        self.controls = {'Up': pygame.K_w,
-                         'Down': pygame.K_s,
-                         'Left': pygame.K_a,
-                         'Right': pygame.K_d,
-                         'Ok': pygame.K_SPACE,
-                         'Esc': pygame.K_ESCAPE,
-                         'Fullscreen': pygame.K_f
-                         }
+        self.controls = {
+            "Up": pygame.K_w,
+            "Down": pygame.K_s,
+            "Left": pygame.K_a,
+            "Right": pygame.K_d,
+            "Ok": pygame.K_SPACE,
+            "Esc": pygame.K_ESCAPE,
+            "Fullscreen": pygame.K_f,
+        }
 
-        if hasattr(platform, 'window'):
-            self.mobile = platform.window.mobile_check() or platform.window.mobile_tablet()
+        if hasattr(platform, "window"):
+            self.mobile = (
+                platform.window.mobile_check()
+                or platform.window.mobile_tablet()
+            )
         else:
             self.mobile = False
 
@@ -52,8 +56,12 @@ class App:
         self.window.resizable = True
         self.window.title = "Space Throngler!"
 
-        self.display = Renderer(self.window, accelerated=-1, target_texture=False)
-        self.screen = Texture(self.display, self.logical_sizeRect.size, target=True)
+        self.display = Renderer(
+            self.window, accelerated=-1, target_texture=False
+        )
+        self.screen = Texture(
+            self.display, self.logical_sizeRect.size, target=True
+        )
         Msr.setScreen(self.display)
 
         self.dt = 0.016
@@ -74,7 +82,7 @@ class App:
         scene.Scene()
 
         Sm.app = self
-        Sm.state = 'menu'
+        Sm.state = "menu"
         Sm.loadin()
 
     def events(self) -> float:
@@ -99,8 +107,12 @@ class App:
         self.mousePos[1].x -= rect.x
         self.mousePos[1].y -= rect.y
         if not (self.mouse[1][0] or self.mouse[1][2] or self.mouse[1][1]):
-            self.mousePos[1].x = pygame.math.clamp(self.mousePos[1].x, 0, rect.w)
-            self.mousePos[1].y = pygame.math.clamp(self.mousePos[1].y, 0, rect.h)
+            self.mousePos[1].x = pygame.math.clamp(
+                self.mousePos[1].x, 0, rect.w
+            )
+            self.mousePos[1].y = pygame.math.clamp(
+                self.mousePos[1].y, 0, rect.h
+            )
         self.mousePos[1].x *= self.logical_sizeRect.w / rect.w
         self.mousePos[1].y *= self.logical_sizeRect.h / rect.h
         self.mousePos[1].x = round(self.mousePos[1].x)
@@ -136,7 +148,7 @@ class App:
         if scale given it sets the window size to that
         """
 
-        if hasattr(platform, 'window'):
+        if hasattr(platform, "window"):
             return
 
         pygame.mouse.set_pos(0, 0)
@@ -157,10 +169,16 @@ class App:
             self.winResolution = scale
             self.window.size = scale
 
-            self.window.position = rect.centerx - self.window.size[0] / 2, rect.centery - self.window.size[1] / 2
+            self.window.position = (
+                rect.centerx - self.window.size[0] / 2,
+                rect.centery - self.window.size[1] / 2,
+            )
 
         rect = self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size))
-        pygame.mouse.set_pos(self.mousePos[1].x / self.logical_sizeRect.w * rect.w + rect.x, self.mousePos[1].y / self.logical_sizeRect.h * rect.h + rect.y)
+        pygame.mouse.set_pos(
+            self.mousePos[1].x / self.logical_sizeRect.w * rect.w + rect.x,
+            self.mousePos[1].y / self.logical_sizeRect.h * rect.h + rect.y,
+        )
 
     def quit(self):
 
@@ -171,7 +189,7 @@ class App:
         self.display.clear()
         self.display.present()
 
-        if not hasattr(platform, 'window'):
+        if not hasattr(platform, "window"):
             self.display.target = None
 
     async def run(self):
@@ -181,7 +199,7 @@ class App:
         self.mouseClickPos = self.mousePos[1]
         self.mouseClicked = 0
         self.events()
-        frame = 0
+        # frame = 0
 
         # sets window
         if self.fullscreen:
@@ -215,21 +233,28 @@ class App:
             self.display.draw_color = (15, 15, 15, 0)
             self.display.clear()
 
-            self.screen.draw(dstrect=self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size)))  # scales game to window
+            self.screen.draw(
+                dstrect=self.logical_sizeRect.fit(
+                    pygame.Rect(0, 0, *self.window.size)
+                )
+            )  # scales game to window
 
             self.display.present()
 
             Sm.prevState = prev_state
 
             # debug fps
-            '''
+            """
             fps_end = time.perf_counter()
             dt = fps_end - fps_start - event_time
             if frame % 8 == 0 and dt:
                 frame = 0
-                self.window.title = f"FPS: {int(1 / dt)}, {round(self.clock.get_fps(), 1)} W:{self.window.size[0]} {self.window.size[1]}"
+                self.window.title = (
+                    f"FPS: {int(1 / dt)}, {round(self.clock.get_fps(), 1)} "
+                    f"W:{self.window.size[0]} {self.window.size[1]}"
+                )
             frame += 1
-            '''
+            """
 
             await asyncio.sleep(0)
             self.clock.tick(60)
@@ -237,6 +262,6 @@ class App:
             self.dt = min(fps_end2 - fps_start - event_time, 0.1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = App()
     asyncio.run(app.run())

@@ -18,10 +18,9 @@ class Game:
 
     def __init__(self):
         Sm.state = "game"
-        Sm.states.update({'game': self.game,
-                          'pause': self.pause,
-                          'game_instance': self
-                          })
+        Sm.states.update(
+            {"game": self.game, "pause": self.pause, "game_instance": self}
+        )
 
         self.menu = Sm.states["menu_instance"]
         self.scene = Sm.states["scene_instance"]
@@ -38,10 +37,22 @@ class Game:
 
         self.sizeHalf = pygame.Vector2(Sm.app.logical_sizeRect.size) / 2
 
-        self.pauseButton = Button(sprites=Assets.pauseSprites, name=0, scale=(2, 2), pos=(0, 601), relativeOffset=(-0.5, 0.5), popup=(1.06, 1.06))
+        self.pauseButton = Button(
+            sprites=Assets.pauseSprites,
+            name=0,
+            scale=(2, 2),
+            pos=(0, 601),
+            relativeOffset=(-0.5, 0.5),
+            popup=(1.06, 1.06),
+        )
 
-        self.exitButton = Button(sprites=Assets.buttonSprites, name=0, scale=(2, 2), relativeOffset=(-0.5, -0.5),
-                                 popup=(1.06, 1.06))
+        self.exitButton = Button(
+            sprites=Assets.buttonSprites,
+            name=0,
+            scale=(2, 2),
+            relativeOffset=(-0.5, -0.5),
+            popup=(1.06, 1.06),
+        )
         self.exitButton.scale = (2, 2)
 
         self.monster = Monster(Assets.monsterSprites, Sm.app.monsterScale)
@@ -60,18 +71,29 @@ class Game:
         self.floorBloodParticles = pygame.sprite.Group()
 
         self.bvh_max_depth = 5
-        self.bvh = BVH(self.bvh_max_depth, [self.monster, *self.boxes, *self.astros, *self.lasers])
+        self.bvh = BVH(
+            self.bvh_max_depth,
+            [self.monster, *self.boxes, *self.astros, *self.lasers],
+        )
         self.monster.bvh = self.bvh
 
         self.asteroidParticles = pygame.sprite.Group()
-        left = Particle(pos=self.sizeHalf, sprites=Assets.asteroidSprites,
-                        animation=(0.6, 1),
-                        velocity=(-150, -100),
-                        scale=(2, 2), turn=60)
-        right = Particle(pos=self.sizeHalf, sprites=Assets.asteroidSprites,
-                         animation=(0.6, 2),
-                         velocity=(150, -100),
-                         scale=(2, 2), turn=-60)
+        left = Particle(
+            pos=self.sizeHalf,
+            sprites=Assets.asteroidSprites,
+            animation=(0.6, 1),
+            velocity=(-150, -100),
+            scale=(2, 2),
+            turn=60,
+        )
+        right = Particle(
+            pos=self.sizeHalf,
+            sprites=Assets.asteroidSprites,
+            animation=(0.6, 2),
+            velocity=(150, -100),
+            scale=(2, 2),
+            turn=-60,
+        )
         self.asteroidParticles.add(left, right)
 
         self.wave = 1
@@ -98,12 +120,25 @@ class Game:
             self.boxTimer -= self.dt
         if self.boxTimer <= 0:
             self.boxTimer = 1
-            self.boxes.add(entity.Box(Assets.boxSprites, Assets.boxSounds, Assets.boxHitSounds))
+            self.boxes.add(
+                entity.Box(
+                    Assets.boxSprites, Assets.boxSounds, Assets.boxHitSounds
+                )
+            )
 
         self.astrosTimer -= self.dt
-        if self.astrosTimer <= 0 and len(self.astros) < self.nextWave-entity.Astronaut.died:
+        if (
+            self.astrosTimer <= 0
+            and len(self.astros) < self.nextWave - entity.Astronaut.died
+        ):
             self.astrosTimer = 2
-            self.astros.add(entity.Astronaut(Assets.astronautSprites, self.astrosHealth, self.astrosDamage * Sm.app.damageMult))
+            self.astros.add(
+                entity.Astronaut(
+                    Assets.astronautSprites,
+                    self.astrosHealth,
+                    self.astrosDamage * Sm.app.damageMult,
+                )
+            )
 
         # wave, difficulty management
         if entity.Astronaut.died == self.nextWave:
@@ -136,13 +171,20 @@ class Game:
             particle.velocity.y += 120 * self.dt
 
         #  box update
-        tentacle_reached = (self.monster.pos - self.monster.tentacle.endPos).length() > self.monster.tentacle.reach * 0.9
-        entity.Box.tentacle(self.dt, (tentacle_end_pos, self.monster.tentacle.endPos), copy.deepcopy(Sm.app.mouse), tentacle_reached)
+        tentacle_reached = (
+            self.monster.pos - self.monster.tentacle.endPos
+        ).length() > self.monster.tentacle.reach * 0.9
+        entity.Box.tentacle(
+            self.dt,
+            (tentacle_end_pos, self.monster.tentacle.endPos),
+            copy.deepcopy(Sm.app.mouse),
+            tentacle_reached,
+        )
         self.boxes.update()
 
         #  astronaut update
         self.astros.update()
-        self.astrosDeathAnim.update('loop')
+        self.astrosDeathAnim.update("loop")
 
         # add rocket particles
         self.rocket()
@@ -154,7 +196,10 @@ class Game:
         #  draw game layers
         self.draw()
 
-        self.bvh = BVH(self.bvh_max_depth, [self.monster, *self.boxes, *self.astros, *self.lasers])
+        self.bvh = BVH(
+            self.bvh_max_depth,
+            [self.monster, *self.boxes, *self.astros, *self.lasers],
+        )
         #  debug BVH
         # self.bvh.draw(Sm.app.display)
         self.collisions = self.bvh.collisionDict()
@@ -165,32 +210,59 @@ class Game:
         if self.asteroidParticles:
             self.asteroidParticles.update()
             for asteroid in self.asteroidParticles:
-                asteroid.velocity.y += 350*self.dt
+                asteroid.velocity.y += 350 * self.dt
 
         # game over
         if self.monster.health <= 0:
             Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
-            Assets.font_white.write(f"Wave cleared:\nKills:\nHits taken:\nBoxes thrown:\nTime:", scale=(2, 2), pos=(300, 195))
-            Assets.font_white.write(f"{self.wave-1}\n{entity.Astronaut.died}\n{self.monster.hitsTaken}\n{entity.Box.thrown}\n{timedelta(seconds=round(self.timer))}", scale=(2, 2), pos=(724, 195), relativeOffset=(0.7, -0.5), align=-1)
+            Assets.font_white.write(
+                "Wave cleared:\nKills:\nHits taken:\nBoxes thrown:\nTime:",
+                scale=(2, 2),
+                pos=(300, 195),
+            )
+            Assets.font_white.write(
+                f"{self.wave-1}\n"
+                f"{entity.Astronaut.died}\n"
+                f"{self.monster.hitsTaken}\n"
+                f"{entity.Box.thrown}\n"
+                f"{timedelta(seconds=round(self.timer))}",
+                scale=(2, 2),
+                pos=(724, 195),
+                relativeOffset=(0.7, -0.5),
+                align=-1,
+            )
 
-            if Sm.app.keys((Sm.app.controls['Ok'], pygame.K_RETURN))[0]:
+            if Sm.app.keys((Sm.app.controls["Ok"], pygame.K_RETURN))[0]:
                 Sm.state = "menu"
         else:
             self.timer += self.dt
 
             if self.clearedTimer > 0:
                 self.clearedTimer -= self.dt
-                Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
-                Assets.font_white.write(f"Wave cleared!", scale=(3, 3), pos=(285, 300), relativeOffset=(-0.5, 0.5))
+                Assets.shade.draw(
+                    scale=Sm.app.logical_sizeRect.size, alpha=0.7
+                )
+                Assets.font_white.write(
+                    "Wave cleared!",
+                    scale=(3, 3),
+                    pos=(285, 300),
+                    relativeOffset=(-0.5, 0.5),
+                )
 
             self.pauseButton.name = 0
             self.pauseButton.update()
-            if Sm.app.keys((Sm.app.controls['Ok'], pygame.K_RETURN))[0] or self.pauseButton.clicked:
+            if (
+                Sm.app.keys((Sm.app.controls["Ok"], pygame.K_RETURN))[0]
+                or self.pauseButton.clicked
+            ):
                 Sm.state = "pause"
 
         self.exitButton.update()
 
-        if Sm.app.keys((Sm.app.controls['Esc'],))[0] or self.exitButton.clicked:
+        if (
+            Sm.app.keys((Sm.app.controls["Esc"],))[0]
+            or self.exitButton.clicked
+        ):
             if self.monster.health <= 0:
                 Sm.state = "menu"
             self.monster.health = 0
@@ -201,43 +273,57 @@ class Game:
 
         if self.clearedTimer > 0:
             Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
-            Assets.font_white.write("Wave cleared!", scale=(3, 3), pos=(285, 300), relativeOffset=(0, 0.5))
+            Assets.font_white.write(
+                "Wave cleared!",
+                scale=(3, 3),
+                pos=(285, 300),
+                relativeOffset=(0, 0.5),
+            )
 
         if self.asteroidParticles:
-            self.asteroidParticles.update('draw')
+            self.asteroidParticles.update("draw")
 
         self.pauseButton.name = 1
         self.pauseButton.update()
 
-        if Sm.app.keys((Sm.app.controls['Ok'], Sm.app.controls['Esc'], pygame.K_RETURN))[0] or self.pauseButton.clicked:
+        if (
+            Sm.app.keys(
+                (
+                    Sm.app.controls["Ok"],
+                    Sm.app.controls["Esc"],
+                    pygame.K_RETURN,
+                )
+            )[0]
+            or self.pauseButton.clicked
+        ):
             Sm.state = "game"
 
     def draw(self):
-        self.menu.starParticles.update('draw')
+        self.menu.starParticles.update("draw")
 
         Assets.ship.draw()
 
-        self.floorBloodParticles.update('draw')
+        self.floorBloodParticles.update("draw")
 
-        self.boxes.update('shadow')
+        self.boxes.update("shadow")
 
-        self.boxParticles.update('draw')
+        self.boxParticles.update("draw")
 
         monster_y = self.monster.pos.y
         #  astronaut draw1
         for astronaut in sorted(self.astros, key=lambda a: a.pos.y):
             if astronaut.rect.top < monster_y:
-                astronaut.update('draw')
+                astronaut.update("draw")
 
         #  astronaut death draw1
         for astronaut in sorted(self.astrosDeathAnim, key=lambda a: a.pos.y):
             if astronaut.rect.top < monster_y:
-                astronaut.update('draw')
+                astronaut.update("draw")
 
         #  box draw1
         for box in sorted(self.boxes, key=lambda a: a.pos.y):
             if box.pos.y < monster_y:
-                box.update('draw')
+                box.update("draw")
 
         #  monster legs draw
         self.monster.legs_draw()
@@ -245,17 +331,17 @@ class Game:
         #  astronaut draw2
         for astronaut in sorted(self.astros, key=lambda a: a.pos.y):
             if astronaut.rect.top >= monster_y:
-                astronaut.update('draw')
+                astronaut.update("draw")
 
         #  astronaut death draw2
         for astronaut in sorted(self.astrosDeathAnim, key=lambda a: a.pos.y):
             if astronaut.rect.top >= monster_y:
-                astronaut.update('draw')
+                astronaut.update("draw")
 
         #  box draw2
         for box in sorted(self.boxes, key=lambda a: a.pos.y):
             if box.pos.y >= monster_y:
-                box.update('draw')
+                box.update("draw")
 
         self.drawDoors()
 
@@ -264,17 +350,24 @@ class Game:
         self.monster.body_draw()
 
         #  lasers update/draw
-        self.lasers.update('draw')
-        self.laserParticles.update('draw')
+        self.lasers.update("draw")
+        self.laserParticles.update("draw")
 
         Assets.rocketSprites.draw(0, pos=(28, 208))
 
-        wave_text = ''
+        wave_text = ""
         for k, x in enumerate(str(self.wave)):
-            wave_text += x + ('\n' if k + 1 != len(str(self.wave)) else '')
+            wave_text += x + ("\n" if k + 1 != len(str(self.wave)) else "")
 
-        Assets.font_black.write(wave_text, scale=(2, 2), pos=(1014, 300), relativeOffset=(0.5, 0))
-        Assets.font_black.write("W\nA\nV\nE", scale=(1.4, 1.31), pos=(963, 300), relativeOffset=(-0.5, 0))
+        Assets.font_black.write(
+            wave_text, scale=(2, 2), pos=(1014, 300), relativeOffset=(0.5, 0)
+        )
+        Assets.font_black.write(
+            "W\nA\nV\nE",
+            scale=(1.4, 1.31),
+            pos=(963, 300),
+            relativeOffset=(-0.5, 0),
+        )
 
     @staticmethod
     def drawDoors():
@@ -288,9 +381,13 @@ class Game:
             self.scene.rocketTimer = random.uniform(0.02, 0.1)
 
             for fire in ((48, 234, 262), (48, 338, 366), (30, 286, 312)):
-                particle = Particle(pos=(fire[0], random.randint(fire[1], fire[2])), sprites=Assets.particleSprites,
-                                    animation=(0.3, 14),
-                                    velocity=(-140, 0),
-                                    scale=(3, 3), rotation=random.randint(-15, 15),
-                                    relativeOffset=(-0.5, 0))
+                particle = Particle(
+                    pos=(fire[0], random.randint(fire[1], fire[2])),
+                    sprites=Assets.particleSprites,
+                    animation=(0.3, 14),
+                    velocity=(-140, 0),
+                    scale=(3, 3),
+                    rotation=random.randint(-15, 15),
+                    relativeOffset=(-0.5, 0),
+                )
                 self.rocketParticles.add(particle)

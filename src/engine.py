@@ -1,5 +1,6 @@
 class StateMachine:
     """holds states and instances. used globally"""
+
     states = dict()
     loadIns = []
     state = None
