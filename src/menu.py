@@ -52,6 +52,7 @@ class Menu:
         pygame.mixer.music.play(-1)
 
     def menu(self):
+        # back to menu
         if Sm.prevState != "menu":
             self.starTimer = 0
             self.menuStarTimer = 0
@@ -102,6 +103,7 @@ class Menu:
         Assets.menuTextSprites.draw(0, scale=(3, 3), pos=(512, 150), relativeOffset=(0, 0))
         Assets.font_white.write("Készítette: Füleki Balázs", pos=Sm.app.logical_sizeRect.midbottom, relativeOffset=(0, 1), scale=(2, 2))
 
+        # eye draw in title
         eye_pos = pygame.Vector2(599, 151)
         offset = -eye_pos + Button.mousePos[1]
         if offset:
@@ -115,6 +117,7 @@ class Menu:
         Assets.soundSprites.draw(0, scale=(2, 2), pos=(475, 370), relativeOffset=(0.5, 0))
         Assets.soundSprites.draw(2, scale=(1, 1), pos=(507, 370), relativeOffset=(-0.5, 0))
 
+        # volume slider
         volume = self.soundSlider.value
         self.soundSlider.update()
         if Sm.app.keys((Sm.app.controls['Left'], pygame.K_LEFT, Sm.app.controls['Down'], pygame.K_DOWN))[0]:
@@ -138,6 +141,7 @@ class Menu:
 
     @staticmethod
     def audio():
+        """sets audio volume levels"""
         pygame.mixer.music.set_volume(Sm.app.soundVolume * 0.2)
 
         Assets.asteroidSound.set_volume(Sm.app.soundVolume)

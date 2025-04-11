@@ -75,7 +75,7 @@ class Game:
         self.asteroidParticles.add(left, right)
 
         self.wave = 1
-        self.nextWave = 2
+        self.nextWave = 2  # kill requirement
 
         self.boxLimit = 3
         self.boxTimer = 1
@@ -151,9 +151,11 @@ class Game:
         self.lasers.update()
         self.rocketParticles.update()
 
+        #  draw game layers
         self.draw()
 
         self.bvh = BVH(self.bvh_max_depth, [self.monster, *self.boxes, *self.astros, *self.lasers])
+        #  debug BVH
         # self.bvh.draw(Sm.app.display)
         self.collisions = self.bvh.collisionDict()
         for key in self.collisions:
@@ -165,6 +167,7 @@ class Game:
             for asteroid in self.asteroidParticles:
                 asteroid.velocity.y += 350*self.dt
 
+        # game over
         if self.monster.health <= 0:
             Assets.shade.draw(scale=Sm.app.logical_sizeRect.size, alpha=0.7)
             Assets.font_white.write(f"Wave cleared:\nKills:\nHits taken:\nBoxes thrown:\nTime:", scale=(2, 2), pos=(300, 195))

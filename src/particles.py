@@ -6,8 +6,10 @@ class Particle(pygame.sprite.Sprite):
     dt = None
 
     def __init__(self, pos, sprites: Msr, animation, velocity, scale=None, relativeOffset=None, rotation=0, turn=0):
-        # animation = List where first element is the lifetime of the particle, others are sprite index numbers
-        # velocity = moving direction, turn = turning speed
+        """
+        animation: List where first element is the lifetime of the particle, others are sprite index numbers
+        velocity: moving direction, turn: turning speed
+        """
 
         super().__init__()
         self.msr = sprites

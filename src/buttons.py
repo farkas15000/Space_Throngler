@@ -7,10 +7,9 @@ class Button(pygame.sprite.Sprite):
     mouse = None
 
     @classmethod
-    def input(cls, mouse_pos, mouse, keyboard):
+    def input(cls, mouse_pos, mouse):
         Button.mousePos = mouse_pos
         Button.mouse = mouse
-        Button.keyboard = keyboard
 
     def __init__(self, sprites: Msr, name=0, scale=(1, 1), pos=(0, 0), relativeOffset=(0, 0), popup=(1, 1), sound=None):
         super().__init__()
@@ -49,7 +48,7 @@ class Button(pygame.sprite.Sprite):
                 self.loop()
 
     def loop(self, draw=True, sound=True, mouse_pos=None, mouse=None, ungrab=False, unstick=False):
-        # update button tests
+        """checks button interactions"""
 
         if mouse_pos is None:
             mouse_pos = Button.mousePos

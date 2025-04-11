@@ -5,8 +5,11 @@ from pygame._sdl2.video import Renderer
 class BVH(pygame.sprite.Sprite):
 
     def __init__(self, max_depth, sprites=(), rect=None, depth=1):
-        # max_depth = max recursion level
-        # sprites = List of objects with self.rect !
+        """
+        creates a static BVH
+        max_depth = max recursion level
+        sprites = a List of objects with self.rect
+        """
 
         pygame.sprite.Sprite.__init__(self)
         self.depth = depth
@@ -59,7 +62,7 @@ class BVH(pygame.sprite.Sprite):
             self.sprites = hold
 
     def collisionSet(self, hit_set=None):
-        # returns a set with non-repeating collides object pairs in tuples
+        """returns a set with non-repeating collided object pairs in tuples"""
 
         if hit_set is None:
             hit_set = set()
@@ -74,8 +77,9 @@ class BVH(pygame.sprite.Sprite):
         return hit_set
 
     def collisionDict(self, hit_dict=None):
-        # returns a dict where the keys are all the objects that had collisions and the values are all the collided objects in a set
-        # probably slower than collisionSet but easier to use
+        """
+        returns a dict where the keys are all the objects that had collisions and the values are all the collided objects in a set
+        """
 
         if hit_dict is None:
             hit_dict = dict()
@@ -98,8 +102,10 @@ class BVH(pygame.sprite.Sprite):
         return hit_dict
 
     def collisionRect(self, rect, hit_set=None, draw=None):
-        # returns a set of all the collided objects with the given rect
-        # debug draw shows the hit tree nodes. needs render surface
+        """
+        returns a set of all the collided objects with the given rect
+        debug draw shows the hit tree nodes. needs renderer
+        """
 
         if hit_set is None:
             hit_set = set()
@@ -118,7 +124,7 @@ class BVH(pygame.sprite.Sprite):
         return hit_set
 
     def draw(self, renderer: Renderer):
-        # draws the whole tree
+        """draws the whole tree"""
         renderer.draw_color = (0, 0, 255, 0)
         renderer.draw_rect(self.rect)
         for child in self.child:
@@ -128,12 +134,14 @@ class BVH(pygame.sprite.Sprite):
             renderer.draw_rect(item.rect)
 
     def root(self, renderer):
-        # draws the root of the tree
+        """draws the root of the tree"""
+
         renderer.draw_color = (255, 0, 0, 0)
         renderer.draw_rect(self.rect)
 
     def info(self):
-        # debug everything
+        """debug info of everything"""
+
         print(self.depth, self.rect, "items:")
         for item in self.sprites:
             print(type(item), item.rect)
@@ -142,7 +150,7 @@ class BVH(pygame.sprite.Sprite):
 
 
 class Collider:
-    # dummy object for BVH
+    """dummy object for BVH"""
 
     def __init__(self, abs_rect):
         self.rect = abs_rect

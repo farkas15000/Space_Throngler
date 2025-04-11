@@ -9,7 +9,7 @@ from assets import Assets
 
 
 def dotsRot(start: pygame.math.Vector2, end: pygame.math.Vector2):
-    # returns the angle from one point to another
+    """returns the angle from one point to another"""
     return pygame.Vector2.angle_to(end-start, (1, 0)) % 360
 
 
@@ -28,7 +28,7 @@ class Box(Button, pygame.sprite.Sprite):
 
     @classmethod
     def tentacle(cls, dt, tentacle_pos, tentacle_mouse, reached):
-        # tentacle info
+        """tentacle data getter"""
         cls.tentaclePos = tentacle_pos
         cls.tentacleMouse = tentacle_mouse
         cls.dt = dt
@@ -116,7 +116,7 @@ class Box(Button, pygame.sprite.Sprite):
                 if not self.vectors:
                     self.vectors.append((self.pos.copy(), self.timer))
 
-                if self.timer - self.vectors[-1][1] >= 0.0005/Box.dt:  # frame rate independent magic number!
+                if self.timer - self.vectors[-1][1] >= 0.0005/Box.dt:  # frame rate independent magic number
                     self.vectors.append((self.pos.copy(), self.timer))
                 if len(self.vectors) > 5:
                     self.vectors.pop(0)
@@ -292,6 +292,7 @@ class Astronaut(pygame.sprite.Sprite):
             self.targeting()
 
     def targeting(self):
+        """updates the chain that the Astronaut follows"""
 
         step_size = 10
         for z in range(3):
@@ -347,6 +348,8 @@ class Astronaut(pygame.sprite.Sprite):
             Assets.bloodSprites.draw(name=blood[0], scale=(self.scale, self.scale), pos=self.pos + blood[1], rotation=blood[2], flip=blood[3])
 
     def animator(self, animation):
+        """updates the animation frames
+        returns True when a lupe is finished"""
 
         length = len(self.animation[animation]) - 1
         full = self.animation[animation][0]
@@ -370,12 +373,14 @@ class Astronaut(pygame.sprite.Sprite):
             for item in new_hits:
                 if isinstance(item, Box):
 
+                    # box collision resolve
                     if (not_held := Box.holding is not item) and not item.falling:
                         if self.distance < 16:
                             if vec := (self.target - item.pos):
                                 self.target += vec.normalize() * Box.dt * 100
                                 self.chainStart += vec.normalize() * Box.dt * 100
 
+                    # damaged by melee attack
                     if not not_held:
                         self.health -= 45 * Box.dt
                         self.bloodTimer -= Box.dt
@@ -391,25 +396,30 @@ class Astronaut(pygame.sprite.Sprite):
                                              scale=(2, 2), rotation=rot)
                             Laser.particles.add(blood)
 
+                    # damaged by thrown box
                     if item.falling and item.speed >= 30:
                         self.health -= item.speed
 
                         random.choice(item.hitSounds).play()
 
+                        # perma blood on Astronaut
                         if not_held:
                             self.bleeds.append((random.randrange(6), (random.uniform(-4 * self.scale, 4 * self.scale), random.uniform(-4 * self.scale, 5 * self.scale)), random.randrange(10)*36, (random.getrandbits(1), random.getrandbits(1))))
                             if len(self.bleeds) > 4:
                                 self.bleeds.pop(0)
 
+                        # blood on box
                         item.bleeds.append((random.randrange(6), (random.uniform(-7, 7), random.uniform(-7, 7)), random.randrange(10) * 36, (random.getrandbits(1), random.getrandbits(1))))
                         if len(item.bleeds) > 3:
                             item.bleeds.pop(0)
 
+                        # on hit blood
                         for z in range(round(item.speed/7.5)):
                             blood = Particle(pos=self.pos + (random.uniform(-4 * self.scale, 4 * self.scale), random.uniform(-4 * self.scale, 5 * self.scale)), sprites=Assets.particleSprites,
                                              animation=(0.4, 19, 19, 18), velocity=pygame.Vector2(100, 0).rotate(rot := (random.randrange(360))), scale=(2, 2), rotation=rot)
                             Laser.particles.add(blood)
 
+                        # blood on floor
                         for z in range(3):
                             blood = Particle(pos=self.pos + (random.uniform(-7 * self.scale, 7 * self.scale), random.uniform(-5 * self.scale, 9 * self.scale)),
                                              sprites=Assets.bloodSprites,
@@ -421,6 +431,7 @@ class Astronaut(pygame.sprite.Sprite):
                         if not_held:
                             collided.add(item)
 
+                # Astronaut collision resolve
                 if isinstance(item, Astronaut) and (vec := (self.target - item.pos)):
                     self.target += vec.normalize() * Box.dt * 80
                     self.chainStart += vec.normalize() * Box.dt * 80
@@ -494,6 +505,7 @@ class Laser(pygame.sprite.Sprite):
 
 
 class Chain:
+    """chain for Astronaut movement"""
 
     def __init__(self, end, length, rot, links, start=None, scale=1.0):
         self.scale = scale

@@ -3,7 +3,6 @@ import pygame
 from multi_sprite_renderer_hardware import MultiSprite as Msr
 
 absPath = os.path.dirname(os.path.abspath(__name__))
-print(absPath)
 
 spritesPath = os.path.join(absPath, 'assets', 'sprites')
 audioPath = os.path.join(absPath, 'assets', 'audio')
@@ -11,7 +10,9 @@ fontPath = os.path.join(absPath, 'assets', 'fonts')
 
 
 def sprite_slicer(width, height, wpad=0, hpad=0, outputList=None, folders=(), name='', surface=None):
-    # cuts up image from file or Surface with optional padding and output list
+    """
+    cuts up image from file name or Surface with optional padding and output list
+    """
 
     if width <= 0 or height <= 0:
         raise Exception('need area!')
@@ -41,6 +42,7 @@ def sprite_slicer(width, height, wpad=0, hpad=0, outputList=None, folders=(), na
 
 
 class Assets:
+    """Asset loader"""
 
     font_black = Msr()
     font_white = Msr()
@@ -72,6 +74,7 @@ class Assets:
 
     @classmethod
     def makeMsrs(cls):
+        """creates all textures for the game"""
         color_key = (163, 73, 164)
 
         linked_sprites = []
@@ -164,6 +167,7 @@ class Assets:
 
     @classmethod
     def makeAudio(cls):
+        """creates all audio for the game"""
 
         pygame.mixer.music.load(os.path.join(audioPath, 'space.ogg'))
 

@@ -69,6 +69,7 @@ class App:
         Assets.makeMsrs()
         Assets.makeAudio()
 
+        # create menu and scene instance
         menu.Menu()
         scene.Scene()
 
@@ -105,7 +106,7 @@ class App:
         self.mousePos[1].x = round(self.mousePos[1].x)
         self.mousePos[1].y = round(self.mousePos[1].y)
 
-        Button.input(self.mousePos, self.mouse, self.keyboard)
+        Button.input(self.mousePos, self.mouse)
 
         self.mouseClicked = 0
         if self.mouse[1][0] and not self.mouse[0][0]:
@@ -130,6 +131,11 @@ class App:
         return pressed, held, released
 
     def resize(self, scale=None):
+        """
+        if scale is None it toggles between fullscreen and last size
+        if scale given it sets the window size to that
+        """
+
         if hasattr(platform, 'window'):
             return
 
@@ -177,6 +183,7 @@ class App:
         self.events()
         frame = 0
 
+        # sets window
         if self.fullscreen:
             self.resize(self.winResolution)
             self.resize()
@@ -190,7 +197,7 @@ class App:
 
             event_time = self.events()
 
-            # debug
+            # fullscreen toggle
             if self.keys((self.controls["Fullscreen"],))[0]:
                 self.resize()
 
@@ -201,14 +208,14 @@ class App:
 
             Particle.dt = self.dt
 
-            Sm.states[Sm.state]()
+            Sm.states[Sm.state]()  # runs current state
 
             self.display.target = None
             Msr.screenRect = self.display.get_viewport()
             self.display.draw_color = (15, 15, 15, 0)
             self.display.clear()
 
-            self.screen.draw(dstrect=self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size)))
+            self.screen.draw(dstrect=self.logical_sizeRect.fit(pygame.Rect(0, 0, *self.window.size)))  # scales game to window
 
             self.display.present()
 

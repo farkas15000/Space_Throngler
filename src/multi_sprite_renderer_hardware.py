@@ -5,8 +5,10 @@ from pygame._sdl2.video import Texture, Renderer
 
 
 def rotated_collision(rect1: (pygame.Rect, float), rect2: (pygame.Rect, float)):
-    # input 2 rects with a rotations: [Rect, rot]
-    # draw or rests first 2 return elements can be used with another
+    """
+    input 2 rects with a rotations: [Rect, rot]
+    Msr draw or rests first 2 return elements can be used with another
+    """
 
     rect1 = (pygame.Vector2(rect1[0].center), pygame.Vector2(rect1[0].topleft) - rect1[0].center), rect1[1]
     rect2 = (pygame.Vector2(rect2[0].center), pygame.Vector2(rect2[0].topleft) - rect2[0].center), rect2[1]
@@ -44,9 +46,14 @@ class MultiSprite:
         cls.screen.present()
 
     def __call__(self, folders=(), names=(), images=(), font=None, size=50, bold=False, italic=False, color='White', background=None, AA=False):
+        """reassign Msr"""
         self.__init__(folders=folders, names=names, images=images, font=font, size=size, bold=bold, italic=italic, color=color, background=background, AA=AA)
 
     def __init__(self, folders=(), names=(), images=(), font=None, size=50, bold=False, italic=False, color='White', background=None, AA=False):
+        """
+        create Msr from file names or surfaces. can be mixed
+        can create font from file. don't mix with above
+        """
 
         self.sprites = {}
 
@@ -87,6 +94,11 @@ class MultiSprite:
                 self.sprites[char] = (texture, rect)
 
     def draw(self, name: int | str = 0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, flip=(0, 0), alpha=1):
+        """
+        name: index, scale relative size, pos: draw origin,
+        relativeOffset: relative shift from pos, offset: fix shift from pos,
+        rotation: rotates around pos
+        """
 
         rect = MultiSprite.rect
         rect.size = self.sprites[name][1].size
@@ -108,6 +120,11 @@ class MultiSprite:
         return rect, rotation, abs_rect, rendered
 
     def rects(self, name: int | str = 0, scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), offset=(0, 0), rotation=0, **kwargs):
+        """
+        name: index, scale relative size, pos: draw origin,
+        relativeOffset: relative shift from pos, offset: fix shift from pos,
+        rotation: rotates around pos
+        """
 
         rect = pygame.Rect()
         rect.size = self.sprites[name][1].size
@@ -125,6 +142,7 @@ class MultiSprite:
         return rect, rotation, abs_rect, MultiSprite.screenRect.colliderect(abs_rect)
 
     def draw_only(self, name: int | str = 0, rects=None, flip=(0, 0), alpha=1, **kwargs):
+        """rects: output from rects"""
 
         if rendered := MultiSprite.screenRect.colliderect(rects[2]) and alpha > 0:
             self.sprites[name][0].alpha = 255 * alpha
@@ -140,6 +158,11 @@ class MultiSprite:
         self.sprites[char] = (texture, rect)
 
     def write(self, text='', scale=(1, 1), pos=(0, 0), relativeOffset=(-0.5, -0.5), align=1, rotation=0, flip=(0, 0), alpha=1):
+        """
+        scale relative size, pos: origin coordinate,
+        relativeOffset: relative shift from pos, align: left=1, centered=0, right=-1
+        rotation: rotates text around pos, flip characters
+        """
 
         width = 0
         enter = 0
@@ -160,7 +183,7 @@ class MultiSprite:
             pos = (pos[0] + (widest * (-relativeOffset[0] - 0.5)), pos[1])
         elif align == -1:  # right
             pos = (pos[0] + (widest * (-relativeOffset[0] + 0.5)), pos[1])
-        elif align == 0:  # center
+        elif align == 0:  # centered
             pos = (pos[0] + (widest * (-relativeOffset[0])), pos[1])
 
         for lk, line in enumerate(lines):

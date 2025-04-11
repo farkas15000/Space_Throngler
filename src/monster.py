@@ -11,7 +11,7 @@ from engine import StateMachine as Sm
 
 
 def dotsRot(start: pygame.math.Vector2, end: pygame.math.Vector2):
-    # returns the angle from one point to another
+    """returns the angle from one point to another"""
     return pygame.Vector2.angle_to(end-start, (1, 0)) % 360
 
 
@@ -38,6 +38,7 @@ class Monster:
 
     def update(self, dt):
 
+        # keyboard control
         move = pygame.Vector2(0, 0)
         keys = Sm.app.keyboard[1]
         if keys[Sm.app.controls['Left']] or keys[pygame.K_LEFT]:
@@ -52,6 +53,7 @@ class Monster:
             move = move.normalize()
             move *= -1
 
+        # mouse/touch control
         if Sm.app.mobile:
             if self.pos.distance_squared_to(Button.mousePos[1]) > (192 / 2.5 * 0.6875)**2:
                 vect = self.pos - Button.mousePos[1]
@@ -177,7 +179,8 @@ class Monster:
         offset.y *= 0.68
         self.msr.draw(1, scale=(1 * self.scale, 1 * self.scale), pos=self.pos, relativeOffset=(0, 0), offset=offset)
 
-        if self.blink <= 0.06 or self.health <= 0:  # blink
+        # blink
+        if self.blink <= 0.06 or self.health <= 0:
             self.msr.draw(3, scale=(2 * self.scale, 2 * self.scale), pos=self.pos, relativeOffset=(0, 0))
             if self.blink <= 0:
                 self.blink = random.random() * 3 + 2
@@ -258,7 +261,9 @@ class Limb:
 
     @staticmethod
     def limb(start: pygame.math.Vector2, end: pygame.math.Vector2, lower: int, upper: int, min_length=0, flip=False):
-        # returns: start pos, first rotation, joint pos, second rotation, real end pos, distance from targeted end pos
+        """
+        returns: start pos, first rotation, joint pos, second rotation, real end pos, distance from targeted end pos
+        """
 
         aim = end - start
         if aim.x == 0 and aim.y == 0:
@@ -267,6 +272,7 @@ class Limb:
         dist = pygame.math.clamp(dist, max(abs(lower - upper), min_length), lower + upper)
         aim = pygame.Vector2.angle_to(aim, (1, 0)) % 360
 
+        # source: https://i.ytimg.com/vi/IKOGwoJ2HLk/maxresdefault.jpg
         u_rot = math.acos((dist ** 2 - lower ** 2 - upper ** 2) / (2 * lower * upper))
         l_rot = math.atan((upper * math.sin(u_rot)) / (lower + upper * math.cos(u_rot)))
         u_rot = math.degrees(u_rot)
@@ -284,10 +290,10 @@ class Limb:
 
 
 class Tentacle:
-    # modified Chain class
+    """modified Chain class for monster tentacle"""
 
-    def __init__(self, sprite, end, length, rot, links, start=None, scale=1.0):
-        self.msr = sprite
+    def __init__(self, sprites, end, length, rot, links, start=None, scale=1.0):
+        self.msr = sprites
         self.scale = scale
         self.timer = 0
         self.length = length * self.scale

@@ -1,5 +1,5 @@
-
 class StateMachine:
+    """holds states and instances. used globally"""
     states = dict()
     loadIns = []
     state = None
@@ -8,5 +8,6 @@ class StateMachine:
 
     @classmethod
     def loadin(cls):
+        """runs states setup"""
         for load in cls.loadIns:
             load()

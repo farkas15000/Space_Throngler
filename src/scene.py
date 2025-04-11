@@ -11,6 +11,7 @@ from game import Game
 
 
 class Scene:
+    """Short animated intro scene after game start"""
 
     def __init__(self):
 
