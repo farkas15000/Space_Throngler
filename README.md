@@ -25,7 +25,7 @@ Minél nagyobb a lendület annál veszélyesebb vagy nyomd agyon őket közelhar
 - Szünet: Koppints a bal alsó sarokba
 
 ### Követelmények
-- pygame-ce 2.5.0
+- pygame-ce 2.5.3
 - pygbag 0.9.2 (Opcionális)
 
 ### Játék futtatása

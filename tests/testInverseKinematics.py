@@ -12,9 +12,11 @@ class TestInverseKinematics(unittest.TestCase):
 
         self.assertAlmostEqual(40, res[2].y)  # middle joint y
 
-        self.assertAlmostEqual(315, round(res[1]))  # first rotation, inverted y in pygame
+        # first rotation, inverted y in pygame
+        self.assertAlmostEqual(315, round(res[1]))
 
-        self.assertAlmostEqual(225, round(res[3]))  # second rotation, inverted y in pygame
+        # second rotation, inverted y in pygame
+        self.assertAlmostEqual(225, round(res[3]))
 
 
 if __name__ == '__main__':
