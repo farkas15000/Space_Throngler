@@ -5,6 +5,9 @@ import sys
 import time
 from pygame._sdl2.video import Window, Renderer, Texture
 
+from config import (WinResolution, Fullscreen, SoundVolume,
+                    AstronautDamageMultiplier, MonsterScale)
+
 from engine import StateMachine as Sm
 from buttons import Button
 from multi_sprite_renderer_hardware import MultiSprite as Msr
@@ -21,13 +24,13 @@ if hasattr(platform, "window") and sys.platform == "emscripten":
 class App:
 
     def __init__(self):
-        self.winResolution = 1024, 600
-        self.fullscreen = False
+        self.winResolution = WinResolution
+        self.fullscreen = Fullscreen
 
-        self.soundVolume = 0.5
+        self.soundVolume = SoundVolume
 
-        self.damageMult = 1
-        self.monsterScale = 1
+        self.damageMult = AstronautDamageMultiplier
+        self.monsterScale = MonsterScale
 
         self.controls = {
             "Up": pygame.K_w,
@@ -52,7 +55,7 @@ class App:
 
         self.logical_sizeRect = pygame.Rect(0, 0, 1024, 600)
 
-        self.window = Window(size=(1024, 600))
+        self.window = Window(size=WinResolution)
         self.window.resizable = True
         self.window.title = "Space Throngler!"
 

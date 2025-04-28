@@ -1,5 +1,5 @@
 import unittest
-from pygame import Vector2 as v
+from pygame import Vector2
 from monster import Limb
 
 
@@ -8,7 +8,7 @@ class TestInverseKinematics(unittest.TestCase):
         pass
 
     def test_limb(self):
-        res = Limb.limb(v(0, 0), v(0, 80), 57, 57)
+        res = Limb.limb(Vector2(0, 0), Vector2(0, 80), 57, 57)
 
         self.assertAlmostEqual(40, res[2].y)  # middle joint y
 

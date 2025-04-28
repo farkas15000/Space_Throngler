@@ -14,7 +14,7 @@ def sprite_slicer(
     height,
     wpad=0,
     hpad=0,
-    outputList=None,
+    output_list=None,
     folders=(),
     name="",
     surface=None,
@@ -33,8 +33,8 @@ def sprite_slicer(
         img = surface
     imgh = img.get_height()
     col = 0
-    if outputList is None:
-        outputList = []
+    if output_list is None:
+        output_list = []
 
     while imgh // height > 0:
         imgw = img.get_width()
@@ -46,13 +46,13 @@ def sprite_slicer(
                     row * (width + wpad), col * (height + hpad), width, height
                 )
             )
-            outputList.append(surface)
+            output_list.append(surface)
             row += 1
 
         imgh -= height + hpad
         col += 1
 
-    return outputList
+    return output_list
 
 
 class Assets:
@@ -119,7 +119,7 @@ class Assets:
             30 * 2,
             36 * 2,
             wpad=2 * 2,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             surface=doors,
         )
         cls.doorSprites = Msr(images=linked_sprites)
@@ -147,7 +147,7 @@ class Assets:
         sprite_slicer(
             22,
             22,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             folders=(spritesPath,),
             name="box_sprites1",
         )
@@ -164,14 +164,14 @@ class Assets:
         sprite_slicer(
             24,
             24,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             folders=(spritesPath,),
             name="astronaut_walk_sprites1",
         )
         sprite_slicer(
             24,
             24,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             folders=(spritesPath,),
             name="astronaut_die_sprites1",
         )
@@ -185,7 +185,7 @@ class Assets:
             6,
             wpad=1,
             hpad=1,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             folders=(spritesPath,),
             name="blood1",
         )
@@ -197,18 +197,18 @@ class Assets:
         particles.set_colorkey(color_key)
         linked_sprites.clear()
         sprite_slicer(
-            7, 7, wpad=1, hpad=1, outputList=linked_sprites, surface=particles
+            7, 7, wpad=1, hpad=1, output_list=linked_sprites, surface=particles
         )
         cls.particleSprites = Msr(images=linked_sprites)
 
-        exitB = pygame.image.load(os.path.join(spritesPath, "exit" + ".png"))
-        exitB.set_colorkey(color_key)
-        cls.buttonSprites = Msr(images=(exitB,))
+        exit_b = pygame.image.load(os.path.join(spritesPath, "exit" + ".png"))
+        exit_b.set_colorkey(color_key)
+        cls.buttonSprites = Msr(images=(exit_b,))
 
         linked_sprites.clear()
-        pauseB = pygame.image.load(os.path.join(spritesPath, "pause" + ".png"))
-        pauseB.set_colorkey(color_key)
-        sprite_slicer(38, 20, outputList=linked_sprites, surface=pauseB)
+        pause = pygame.image.load(os.path.join(spritesPath, "pause" + ".png"))
+        pause.set_colorkey(color_key)
+        sprite_slicer(38, 20, output_list=linked_sprites, surface=pause)
         cls.pauseSprites = Msr(images=linked_sprites)
 
         cls.startSprites = Msr(folders=(spritesPath,), names=("start1",))
@@ -229,7 +229,7 @@ class Assets:
         sprite_slicer(
             144,
             32,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             folders=(spritesPath,),
             name="mobile_sprites1",
         )
@@ -241,7 +241,7 @@ class Assets:
         sprite_slicer(
             59,
             44,
-            outputList=linked_sprites,
+            output_list=linked_sprites,
             folders=(spritesPath,),
             name="asteroid_sprites1",
         )
