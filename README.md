@@ -29,9 +29,11 @@ Minél nagyobb a lendület annál veszélyesebb vagy nyomd agyon őket közelhar
 - pygbag 0.9.2 (Opcionális)
 
 ### Játék futtatása
-- Futtassa a src/main.py-t
+- Futtassa a `main.py`-t a `.\src\` working directory-ból
 
-- Futtatás lokálisan weben: pygbag .\src\main.py
+### Játék futtatás lokálisan weben:
+- `pygbag .\src\main.py`
+- vagy: `pygbag .\main.py` a `.\src\` working directory-ból
 
 ### Készítette
 - Név: Füleki Balázs
