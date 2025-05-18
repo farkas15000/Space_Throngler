@@ -35,6 +35,10 @@ Minél nagyobb a lendület annál veszélyesebb vagy nyomd agyon őket közelhar
 - `pygbag .\src\main.py`
 - vagy: `pygbag .\main.py` a `.\src\` working directory-ból
 
+### A projekt a következő kódelemzőkkel lett tesztelve:
+- flake8 `flake8 .\src\ > flake8.txt`
+- pycodestyle `pycodestyle .\src\ > pycodestyle.txt`
+
 ### Készítette
 - Név: Füleki Balázs
 - Neptun: Q9329E
